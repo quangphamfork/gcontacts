@@ -3,7 +3,10 @@ var Gcontacts = {
     url: 'https://accounts.google.com/o/oauth2/auth',
     origin: window.location.href.replace(window.location.pathname,''),
     redirect_uri: window.location.href,
+    header: {token: 'Authorization'},
+    group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json', projection: 'thin' }
   },
+  groups: {},
   token_data: {valid: false},
   parameters: {
     response_type: 'token',
@@ -28,7 +31,7 @@ var Gcontacts = {
         window.close();
       }
       if(typeof(config) !== 'undefined'){
-        clearTimeout(this.config.timeout);
+        if(window._GcontactsTokenTimeout != 'undefined') clearTimeout(window._GcontactsTokenTimeout);
         for(attr in config) this.parameters[attr] = config[attr];
         this.check_config();
         window.addEventListener('message', Gcontacts.message,  false);
@@ -42,9 +45,9 @@ var Gcontacts = {
     },
     message: function(event){
       with(Gcontacts){
-        data = event.data.split('&');
+        var data = event.data.split('&');
         for (i in data){
-          content = data[i].match('(.*)=(.*)').splice(1,3);
+          var content = data[i].match('(.*)=(.*)').splice(1,3);
           token_data[content[0].replace(/^#/,'')] = content[1];
         }
         if (token_data.token != 'undefined' && token_data.expire_in != 'undefined') Gcontacts.set_token_state(true);
@@ -53,14 +56,42 @@ var Gcontacts = {
     set_token_state: function(state){
       with(Gcontacts){
         if (state){
-          config.timeout = setTimeout(set_token_state(false), Number(token_data.expires_in))
+          var msec = Number(token_data.expires_in) * Number(1000);
+          window._GcontactsTokenTimeout = setTimeout(set_token_state, msec);
           token_data.valid = true;
-          console.log(['token valid for:', token_data.expires_in].join(' '));
+          console.log(['token valid for:', token_data.expires_in, 'seconds', 'on:', Date()].join(' '));
         }
         else{
           token_data.valid = false;
-          console.log('token expired');
+          throw(['token expired on', Date()]);
         }
       }
+    },
+    get_groups: function(callback){
+       if(Gcontacts.token_data.valid){
+         var group = Gcontacts.config.group;
+         var url = group.from + group.projection + '?alt=' + group.alt;
+         var header = [Gcontacts.token_data.token_type,Gcontacts.token_data.access_token].join(' ');
+         console.log(group);
+         console.log(url);
+         console.log(Gcontacts.config.header.token);
+         console.log(header);
+         Gcontacts.xhr = new XMLHttpRequest();
+         Gcontacts.xhr.open('GET', url, true);
+         Gcontacts.xhr.setRequestHeader('Authorization', header);
+         Gcontacts.xhr.withCredentials = true;
+         Gcontacts.xhr.onload = callback;
+         Gcontacts.xhr.send();
+       }
+    },
+    conso: function(){
+      for(i in Gcontacts.groups.feed.entry) console.log(Gcontacts.groups.feed.entry[i].content.$t)
+    },
+    get_groups_response: function(){
+      Gcontacts.groups = JSON.parse(Gcontacts.xhr.response);
+      Gcontacts.conso();
+    },
+    show_groups: function(){
+      if(Gcontacts.groups != 'undefined') Gcontacts.get_groups(Gcontacts.get_groups_response);
     }
 }
