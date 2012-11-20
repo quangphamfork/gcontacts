@@ -7,8 +7,7 @@ var Gcontacts = {
     group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json', projection: 'thin' },
     contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/full/?', alt: 'json' }
   },
-  events: {
-  },
+  events: {},
   contacts: {},
   groups: {},
   token_data: {valid: false},
@@ -72,7 +71,7 @@ var Gcontacts = {
         }
         else{
           token_data.valid = false;
-          throw(['token expired on', Date()]);
+          throw(['token expired on', Date()].join(' '));
         }
       }
     },
@@ -88,9 +87,9 @@ var Gcontacts = {
          Gcontacts.xhr.open('GET', url, true);
          Gcontacts.xhr.setRequestHeader('Authorization', header);
          Gcontacts.xhr.withCredentials = true;
-         Gcontacts.xhr.onload = callback;
+         Gcontacts.xhr.onload = (callback != undefined) ? callback : Gcontacts.get_groups_response;
          Gcontacts.xhr.send();
-       }
+       }else throw 'invalid token';
     },
     get_group: function(group_link,callback){
        if(Gcontacts.token_data.valid){
@@ -101,37 +100,49 @@ var Gcontacts = {
          Gcontacts.xhr.open('GET', url, true);
          Gcontacts.xhr.setRequestHeader('Authorization', header);
          Gcontacts.xhr.withCredentials = true;
-         Gcontacts.xhr.onload = callback;
+         Gcontacts.xhr.onload = (callback != undefined) ? callback : Gcontacts.contacts_response;
          Gcontacts.xhr.send();
-       }
+       }else throw 'invalid token';
     },
     get_groups_response: function(){
       Gcontacts.groups = JSON.parse(Gcontacts.xhr.response);
       var groups = [];
       with(Gcontacts.groups.feed){
-        for(i in entry){
+        for(i in entry)
           groups.push(Object.create({},{ name: {value: entry[i].title.$t}, id: {value: entry[i].id.$t}}));
-        }
       }
       Gcontacts.events.groups.data = groups;
       document.dispatchEvent(Gcontacts.events.groups);
     },
     get_contacts_response: function(){
-      console.log('heui');
       Gcontacts.contacts = JSON.parse(Gcontacts.xhr.response);
       var contacts = [];
       with(Gcontacts.contacts.feed){
-        for(i in entry){
+        for(i in entry)
           contacts.push(Object.create({},{ name: {value: entry[i].title.$t}, email: {value: entry[i].gd$email}}));
-        }
       }
       Gcontacts.events.contacts.data = contacts;
       document.dispatchEvent(Gcontacts.events.contacts);
     },
     show_groups: function(){
-      if(Gcontacts.groups != 'undefined') Gcontacts.get_groups(Gcontacts.get_groups_response);
+     if(Gcontacts.token_data.valid){
+      if(Gcontacts.groups.feed == undefined)
+        Gcontacts.get_groups(Gcontacts.get_groups_response)
+      else
+        with(Gcontacts.groups.feed)for(i in entry)console.log([entry[i].title.$t,entry[i].id.$t]);
+      }else throw 'get a valid token!';
     },
-    get_contacts_by_group: function(group){
-      if(Gcontacts.contacts.group != group) Gcontacts.get_group(group,Gcontacts.get_contacts_response);
+    get_contacts_by_group: function(group_name){
+      if((/^http(s?):\/\//).test(group_name))
+          Gcontacts.get_group(group_name,Gcontacts.get_contacts_response);
+      else{
+        if(Gcontacts.groups.feed != undefined){
+          var group = '';
+          with(Gcontacts.groups.feed)for(i in entry)if(entry[i].title.$t == group_name) group = entry[i].id.$t;
+          if(group != '')
+            Gcontacts.get_group(group,Gcontacts.get_contacts_response)
+          else throw ['group',group_name,'not found'].join(' ');
+        }else throw 'need get the groups contacts first';
+      }
     }
 }
