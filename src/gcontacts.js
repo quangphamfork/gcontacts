@@ -5,7 +5,7 @@ var Gcontacts = {
     redirect_uri: window.location.href,
     header: {token: 'Authorization'},
     group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json', projection: 'thin' },
-    contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/full/?', alt: 'json' }
+    contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/thin/?', alt: 'json' }
   },
   events: {},
   contacts: {},
@@ -19,8 +19,10 @@ var Gcontacts = {
   },
   auth: function(href){
     var url = [];
-    for(var property in this.config) if (property !==  'url') url.push([encodeURIComponent(property), encodeURIComponent(this.config[property])].join('='));
-    for(var property in this.parameters) url.push([encodeURIComponent(property), encodeURIComponent(this.parameters[property])].join('='));
+    for(var property in this.config) if (property !==  'url')
+      url.push([encodeURIComponent(property), encodeURIComponent(this.config[property])].join('='));
+    for(var property in this.parameters)
+      url.push([encodeURIComponent(property), encodeURIComponent(this.parameters[property])].join('='));
     return [(href ? href : this.config.url), url.join('&')].join('?');
   },
   login: function(href){
@@ -43,13 +45,16 @@ var Gcontacts = {
     },
     check_config: function(){
       for(var property in this.parameters){
-        if(typeof(this.parameters[property]) !== 'string' || this.parameters[property] === '') throw [property,'Its different than we spect!'].join(' ');
+        if(typeof(this.parameters[property]) !== 'string' || this.parameters[property] === '')
+          throw [property,'Its different than we spect!'].join(' ');
       }
       return true;
     },
     create_custom_events: function(){
       this.events.contacts = new CustomEvent('gc.contacts');
+      this.events.contacts.error = new CustomEvent('gc.contacts.error');
       this.events.groups = new CustomEvent('gc.groups');
+      this.events.groups.error = new CustomEvent('gc.groups.error');
     },
     message: function(event){
       with(Gcontacts){
@@ -142,7 +147,7 @@ var Gcontacts = {
           if(group != '')
             Gcontacts.get_group(group,Gcontacts.get_contacts_response)
           else throw ['group',group_name,'not found'].join(' ');
-        }else throw 'need get the groups contacts first';
+        }else throw 'need get the contacts groups first with get_groups();';
       }
     }
-}
+};
