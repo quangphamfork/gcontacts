@@ -5,8 +5,8 @@ var Gcontacts = (function(){
     origin: window.location.href.replace(window.location.pathname,''),
     redirect_uri: window.location.href,
     header: {token: 'Authorization'},
-    group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json', projection: 'thin' },
-    contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/thin/?', alt: 'json' }
+    group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json-in-script', projection: 'thin' },
+    contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/thin/?', alt: 'json-in-script' }
   };
   events = {};
   contacts = {};
