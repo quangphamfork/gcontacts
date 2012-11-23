@@ -1,31 +1,25 @@
 var Gcontacts = (function(){
   var xhr = new XMLHttpRequest();
-  config = {
+  var config = {
     url: 'https://accounts.google.com/o/oauth2/auth',
     origin: window.location.href.replace(window.location.pathname,''),
     redirect_uri: window.location.href,
     header: {token: 'Authorization'},
-    group:{ from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json', projection: 'thin' },
-    contacts: { by_group: 'https://www.google.com/m8/feeds/contacts/default/thin/?', alt: 'json' }
+    group:{ callback: 'Gcontacts.get_resp', from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json-in-script', projection: 'thin'},
+    contacts: { callback: 'Gcontacts.get_resp', by_group: 'https://www.google.com/m8/feeds/contacts/default/thin?', alt: 'json-in-script'}
   };
-  events = {};
-  contacts = {};
-  groups = {};
-  token_data = {valid: false};
-  parameters = {
-    response_type: 'token',
-    client_id: '896644733940.apps.googleusercontent.com',
-    scope: 'https://www.google.com/m8/feeds',
-    inmediate: 'true',
-  };
-  check_config = function(){
-    for(var property in parameters){
+  var parameters = { response_type: 'token', client_id: '', scope: '', inmediate: 'true'};
+  var token_data = {valid: false};
+  var events = {};
+  var contacts = {};
+  var groups = {};
+  var check_config = function(){
+    for(var property in parameters)
       if(typeof(parameters[property]) !== 'string' || parameters[property] === '')
         throw [property,'Its different than we spect!'].join(' ');
-    }
     return true;
   };
-  auth = function(href){
+  var auth = function(href){
     var url = [];
     for(var property in config)
       if(property !== 'url')
@@ -34,15 +28,17 @@ var Gcontacts = (function(){
       url.push([encodeURIComponent(property), encodeURIComponent(parameters[property])].join('='));
     return [(href ? href : config.url), url.join('&')].join('?');
   };
-  login = function(href){
-    if(check_config()){
-      url = auth(href);
-      window.open(url, "_blank", ['toolbar=no', 'location= '+ (window.opera ? 'no' : 'yes'), 'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no', 'width=' + window.screen.width / 2, 'height='+ window.screen.height / 2 ].join())
-    }
+  var login = function(href){
+    if (!token_data.valid){
+      if(check_config())
+        window.open(auth(href), "_blank", ['toolbar=no', 'location= '+ (window.opera ? 'no' : 'yes'), 'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no', 'width=' + window.screen.width / 2, 'height='+ window.screen.height / 2 ].join())
+
+      }else throw 'you are good to go!'
   };
-  init = function(config){
+  var init = function(config){
     if (window.location.hash !== '') {
-      window.opener.postMessage(window.location.hash, window.location.origin);
+      var origin_url = window.location.origin || window.location.protocol + window.location.host;
+      window.opener.postMessage(window.location.hash, origin_url);
       window.close();
     }
     if(typeof(config) != undefined){
@@ -55,11 +51,12 @@ var Gcontacts = (function(){
       window.addEventListener('message', message,  false);
     }else throw 'wrong initialization';
   };
-   create_custom_events =  function(){
+  var create_custom_events =  function(){
       events.contacts = new CustomEvent('gc.contacts');
       events.groups = new CustomEvent('gc.groups');
+      events.ready = new CustomEvent('gc.ready');
     };
-   message = function(event){
+   var message = function(event){
         var data = event.data.split('&');
         for (i in data){
           var content = data[i].match('(.*)=(.*)').splice(1,3);
@@ -67,7 +64,7 @@ var Gcontacts = (function(){
         }
         if (token_data.token != 'undefined' && token_data.expire_in != 'undefined') set_token_state(true);
     };
-    set_token_state = function(state){
+   var set_token_state = function(state){
         if (state){
           var msec = Number(token_data.expires_in) * Number(1000);
           window._GcontactsTokenTimeout = setTimeout(set_token_state, msec);
@@ -79,75 +76,99 @@ var Gcontacts = (function(){
           throw(['token expired on', Date()].join(' '));
         }
     };
-    get_groups = function(callback){
+    var script_in_dom = function(url, callback){
+      url +=  ['&access_token',token_data.access_token].join('=');
+      url +=  ['&callback',callback].join('=');
+      var groups_element = document.createElement("script");
+      groups_element.src = url;
+      groups_element.async = true;
+      groups_element.onload = cleanup;
+      document.body.appendChild(groups_element);
+    };
+    var cleanup = function(){ this.parentNode.removeChild(this) };
+    var get_groups = function(callback){
        if(token_data.valid){
          group = config.group;
          url = group.from + group.projection + '?alt=' + group.alt;
-         header = [token_data.token_type,token_data.access_token].join(' ');
-         //get_xhr();
-         xhr.open('GET', url, true);
-         xhr.setRequestHeader('Authorization', header);
-         xhr.withCredentials = true;
-         xhr.onload = (callback != undefined) ? callback : get_groups_response;
-         xhr.send();
+         script_in_dom(url, group.callback);
        }else throw 'invalid token';
     };
-    get_group = function(group_link,callback){
+    var get_group = function(group_link){
        if(token_data.valid){
-         contacts = config.contacts;
-         url = [contacts.by_group, 'group=', group_link, '&alt=',contacts.alt].join('');
-         header = [token_data.token_type,token_data.access_token].join(' ');
-         //get_xhr();
-         xhr.open('GET', url, true);
-         xhr.setRequestHeader('Authorization', header);
-         xhr.withCredentials = true;
-         xhr.onload = (callback != undefined) ? callback : get_contacts_response;
-         xhr.send();
+         contact = config.contacts;
+         url = [contact.by_group, 'group=', group_link, '&alt=', contact.alt].join('');
+         script_in_dom(url, contact.callback);
        }else throw 'invalid token';
     };
-    get_groups_response =  function(){
-      groups = JSON.parse(xhr.response);
+    var get_groups_response =  function(){
       var _groups = [];
         for(var i = 0, group; group = groups.feed.entry[i]; i++)
           _groups.push(Object.create({},{ name: {value: group.title.$t}, id: {value: group.id.$t}}));
       events.groups.data = _groups;
-      document.dispatchEvent(events.groups);
+      window.document.dispatchEvent(events.groups);
     };
-    get_contacts_response = function(){
-      contacts = JSON.parse(xhr.response);
-      _contacts = [];
+    var get_contacts_response = function(){
+      var _contacts = [];
         for(var i = 0,contact; contact = contacts.feed.entry[i]; i++)
           _contacts.push(Object.create({},{ name: {value: contact.title.$t}, email: {value: contact.gd$email}}));
       events.contacts.data = _contacts;
-      document.dispatchEvent(events.contacts);
+      window.document.dispatchEvent(events.contacts);
     };
-    show_groups = function(){
-     if(token_data.valid){
-      if(groups.feed == undefined) get_groups(get_groups_response)
-      else for(var i=0,group; group = groups.feed.entry[i]; i++) console.log([group.title.$t,group.id.$t]);
+    var show_groups = function(){
+      if(token_data.valid){
+        if(groups.feed == undefined){
+          window.addEventListener('gc.groups',Gcontacts.show_groups);
+          get_groups(get_groups_response)
+        }
+        else{
+          collection = [];
+          for(var i=0,group; group = groups.feed.entry[i]; i++)collection.push([group.title.$t,group.id.$t]);
+          return collection;
+        }
       }else throw 'get a valid token!';
     };
-    get_id_group = function(group_name){
+    var get_id_group = function(group_name){
       for(var i=0,group;group = groups.feed.entry[i];i++)
         if(group.title.$t == group_name) return group.id.$t
     };
-    get_contacts_by_group = function(group_name){
+    var get_contacts_by_group = function(group_name){
       if((/^http(s?):\/\//).test(group_name))
-          get_group(group_name,get_contacts_response);
+          get_group(group_name);
       else{
         if(groups.feed != undefined){
           group = get_id_group(group_name);
           if(group != '')
-            get_group(group,get_contacts_response)
+            get_group(group);
           else throw ['group',group_name,'not found'].join(' ');
         }else throw 'need get the contacts groups first with get_groups();';
       }
     };
+    var get_response = function(res){
+      if ((/group$/).test(res.feed.category[0].term)){
+        groups = res;
+        get_groups_response();
+      }
+      else{
+        contacts = res;
+        get_contacts_response();
+      }
+    };
+    var ready= function(){
+      var loaded = new CustomEvent('gc.ready');
+      window.document.dispatchEvent(loaded);
+    };
     return{
-      parameters: parameters,
+      _parameters: parameters,
+      _ready: ready,
       init: init,
       login: login,
       groups: show_groups,
-      contacts_by_group: get_contacts_by_group
+      contacts_by_group: get_contacts_by_group,
+      getToken: function(){ if(token_data.valid)
+                              return token_data.access_token
+                            else
+                              throw 'not valid token! do Gcontacts.login() first'},
+      get_resp: get_response,
+      show_groups: show_groups,
     };
 }());

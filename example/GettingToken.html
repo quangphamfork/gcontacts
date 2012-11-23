@@ -6,9 +6,18 @@
   </head>
   <body>
     <button onClick="Gcontacts.login();return false;" >GetToken</button>
-    <script id='gcontacts' src='../src/gcontacts.js'></script>
     <script>
-      Gcontacts.init(Gcontacts.parameters);
+      var parameters = {
+        response_type: 'token',
+        client_id: '896644733940.apps.googleusercontent.com',
+        scope: 'https://www.google.com/m8/feeds',
+        inmediate: 'true'
+      };
+      window.document.addEventListener('gc.ready',function(){
+        Gcontacts.init(parameters);
+        console.log('ready Gcontacts');
+      });
     </script>
+    <script onload=Gcontacts._ready(); src='../src/Gcontacts.js' async='async'></script>
   </body>
 </html>
