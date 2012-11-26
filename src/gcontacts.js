@@ -4,33 +4,71 @@ var Gcontacts = (function(){
     url: 'https://accounts.google.com/o/oauth2/auth',
     origin: window.location.href.replace(window.location.pathname,''),
     redirect_uri: window.location.href,
-    header: {token: 'Authorization'},
     group:{ callback: 'Gcontacts.get_resp', from: 'https://www.google.com/m8/feeds/groups/default/', alt: 'json-in-script', projection: 'thin'},
     contacts: { callback: 'Gcontacts.get_resp', by_group: 'https://www.google.com/m8/feeds/contacts/default/thin?', alt: 'json-in-script'}
   };
-  var parameters = { response_type: 'token', client_id: '', scope: '', inmediate: 'true'};
-  var token_data = {valid: false};
-  var events = {};
+  var parameters = {
+    params: {
+      client_id: '',
+      response_type: 'token',
+      scope: '',
+      inmediate: 'true'
+    },
+    get check_config(){
+      if(this.isBlank)
+        throw 'parameters are different than we spect!';
+      return true;
+    },
+    get isBlank(){
+      for(property in this.params)
+        if(this.params[property] == '') return true;
+      return false;
+    },
+    get show(){
+       return this.params;
+    },
+    get encoded(){
+      url = [];
+      for(property in this.params)
+        url.push([encodeURIComponent(property), encodeURIComponent(this.params[property])].join('='));
+      return url;
+    },
+    get token(){ if(token_data.valid) return token_data.access_token }
+  };
+  var token_data = {
+    valid: false,
+    get state(){return this.valid},
+    set state(val){
+      this.valid = val;
+      if(val)
+        {
+          var msec = Number(token_data.expires_in) * Number(1000);
+          window._GcontactsTokenTimeout = setTimeout(function(){ token_data.state=false}, msec);
+          window.document.dispatchEvent(events.login.success);
+          console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
+        }else
+          throw(['token expired on', Date()].join(' '));
+    }
+  };
+  var events = {
+    set create(evts){
+      for(var i = 0,event; event = evts[i];i++)
+        events[event] = {success: new CustomEvent('gc.' + event + '.success'), fail: new CustomEvent('gc.' + event + '.fail')}
+    }
+  };
   var contacts = {};
   var groups = {};
-  var check_config = function(){
-    for(var property in parameters)
-      if(typeof(parameters[property]) !== 'string' || parameters[property] === '')
-        throw [property,'Its different than we spect!'].join(' ');
-    return true;
-  };
   var auth = function(href){
     var url = [];
     for(var property in config)
       if(property !== 'url')
         url.push([encodeURIComponent(property), encodeURIComponent(config[property])].join('='));
-    for(var property in parameters)
-      url.push([encodeURIComponent(property), encodeURIComponent(parameters[property])].join('='));
+    url = url.concat(parameters.encoded);
     return [(href ? href : config.url), url.join('&')].join('?');
   };
   var login = function(href){
     if (!token_data.valid){
-      if(check_config())
+      if(parameters.check_config)
         window.open(auth(href), "_blank", ['toolbar=no', 'location= '+ (window.opera ? 'no' : 'yes'), 'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no', 'width=' + window.screen.width / 2, 'height='+ window.screen.height / 2 ].join())
 
       }else throw 'you are good to go!'
@@ -45,36 +83,21 @@ var Gcontacts = (function(){
       if(window._GcontactsTokenTimeout != undefined)
         clearTimeout(window._GcontactsTokenTimeout);
       for(attr in config)
-        parameters[attr] = config[attr];
-      check_config();
-      create_custom_events();
+        parameters.params[attr] = config[attr];
+      parameters.check_config;
+      events.create = ['login','contacts','groups'];
       window.addEventListener('message', message,  false);
     }else throw 'wrong initialization';
   };
-  var create_custom_events =  function(){
-      events.contacts = new CustomEvent('gc.contacts');
-      events.groups = new CustomEvent('gc.groups');
-      events.ready = new CustomEvent('gc.ready');
-    };
-   var message = function(event){
+  var message = function(event){
         var data = event.data.split('&');
         for (i in data){
           var content = data[i].match('(.*)=(.*)').splice(1,3);
           token_data[content[0].replace(/^#/,'')] = content[1];
         }
-        if (token_data.token != 'undefined' && token_data.expire_in != 'undefined') set_token_state(true);
-    };
-   var set_token_state = function(state){
-        if (state){
-          var msec = Number(token_data.expires_in) * Number(1000);
-          window._GcontactsTokenTimeout = setTimeout(set_token_state, msec);
-          token_data.valid = true;
-          console.log(['token valid for:', token_data.expires_in, 'seconds', 'on:', Date()].join(' '));
-        }
-        else{
-          token_data.valid = false;
-          throw(['token expired on', Date()].join(' '));
-        }
+        if(token_data.token != 'undefined' && token_data.expire_in != 'undefined')
+          token_data.state = true;
+        else window.dispatchEvent(events.login.fail)
     };
     var script_in_dom = function(url, callback){
       url +=  ['&access_token',token_data.access_token].join('=');
@@ -104,20 +127,22 @@ var Gcontacts = (function(){
       var _groups = [];
         for(var i = 0, group; group = groups.feed.entry[i]; i++)
           _groups.push(Object.create({},{ name: {value: group.title.$t}, id: {value: group.id.$t}}));
-      events.groups.data = _groups;
-      window.document.dispatchEvent(events.groups);
+      result = groups.feed ? 'success' : 'fail';
+      events.groups[result].data = _groups;
+      window.document.dispatchEvent(events.groups[result]);
     };
     var get_contacts_response = function(){
       var _contacts = [];
         for(var i = 0,contact; contact = contacts.feed.entry[i]; i++)
           _contacts.push(Object.create({},{ name: {value: contact.title.$t}, email: {value: contact.gd$email}}));
-      events.contacts.data = _contacts;
-      window.document.dispatchEvent(events.contacts);
+      result = contacts.feed ? 'success' : 'fail';
+      events.contacts[result].data = _contacts;
+      window.document.dispatchEvent(events.contacts[result]);
     };
     var show_groups = function(){
       if(token_data.valid){
         if(groups.feed == undefined){
-          window.addEventListener('gc.groups',Gcontacts.show_groups);
+          window.addEventListener('gc.groups.success',Gcontacts.show_groups);
           get_groups(get_groups_response)
         }
         else{
@@ -154,21 +179,20 @@ var Gcontacts = (function(){
       }
     };
     var ready= function(){
-      var loaded = new CustomEvent('gc.ready');
-      window.document.dispatchEvent(loaded);
+      events.create = ['ready'];
+      window.document.dispatchEvent(events.ready.success);
     };
     return{
       _parameters: parameters,
+      _events: events,
       _ready: ready,
+      valid: function(){token_data.valid},
+      _token_data: token_data,
       init: init,
       login: login,
       groups: show_groups,
       contacts_by_group: get_contacts_by_group,
-      getToken: function(){ if(token_data.valid)
-                              return token_data.access_token
-                            else
-                              throw 'not valid token! do Gcontacts.login() first'},
       get_resp: get_response,
-      show_groups: show_groups,
+      show_groups: show_groups
     };
 }());
