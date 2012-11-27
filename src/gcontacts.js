@@ -37,15 +37,18 @@ var Gcontacts = (function(){
   };
 var token_data = {
   valid: false,
+  expire_date: '',
   get isSet(){return this.access_token != undefined && this.expires_in != undefined},
-  get state(){return this.valid},
+  get state(){ return ( this.valid && (this.expire_date > new Date()) ) },
   set state(val){
     this.valid = val;
     if(val)
       {
         var msec = Number(token_data.expires_in) * Number(1000);
-        window._GcontactsTokenTimeout = setTimeout(function(){ token_data.state=false}, msec);
-        window.document.dispatchEvent(events.login.success);
+        window._GcontactsTokenTimeout = setTimeout(function(){ console.log('yess');token_data.state = false}, msec);
+        this.expire_date = new Date();
+        this.expire_date.setHours( this.expire_date.getHours() + 1);
+        events.trigger = ['login','success'];
         console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
       }else
         throw(['token expired on', Date()].join(' '));
@@ -192,6 +195,7 @@ var ready= function(){
 };
 return{
   raw: raw,
+  _token_data: token_data,
   init: init,
   _ready: ready,
   login: login,
