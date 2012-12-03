@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Contacts by Groups</title>
+		<meta name="description" content="library to get contacts from Gmail" />
+		<meta name="keywords" content="Gcontacts, google, gmail, contacts, js, javascript" />
+		<meta name="author" content="Gagoar" />
+		<link rel="stylesheet" type="text/css" href="css/style2.css" />
+    <script src="js/modernizr.custom.63321.js"></script>
+	</head>
+	<body>
+		<div class="container">
+			<!-- Codrops top bar -->
+			<div class="codrops-top clearfix">
+				<span class="right">
+					<a href="http://github.com/gagoar">
+						<strong>Gagoar on GitHub</strong>
+					</a>
+				</span>
+			</div><!--/ Codrops top bar -->
+			<header class="clearfix">
+				<h1>Gcontacts<span>for retrive contacts from Gmail</span></h1>
+				<nav class="codrops-demos">
+				</nav>
+			</header>
+			<section class="main clearfix">
+				<div class="fleft">
+          <a href="#"></a>
+					<p>In this example we use the librery Gcontacts to retrive the groups in your Gmail and if you pick one we show his members.</p>
+				</div>
+        <div id='clicker' class="fleft">
+          <select id="dropdown" class="cd-select">
+            <option value="-1" selected>Show me my groups!</option>
+          </select>
+        </div>
+      </div>
+			</section>
+		</div><!-- /container -->
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
+    <script onload=Gcontacts._ready(); src='../src/Gcontacts.js' async='async'></script>
+		<script type="text/javascript">
+      var parameters = {
+        response_type: 'token',
+        client_id: '896644733940.apps.googleusercontent.com',
+        scope: 'https://www.google.com/m8/feeds',
+        inmediate: 'true'
+      };
+      var opt =  {
+					gutter : 5,
+					delay : 100,
+					random : true
+      };
+      var replace_contacts = function(e){
+      };
+      var retrive_contacts_by_group =  function(e){
+       Gcontacts.contacts_by_group(e.target.textContent);
+      }
+      var retrive_groups = function(e){
+        $('.cd-dropdown span:first').off('click');
+        Gcontacts.groups();
+      };
+      var replace_contacts = function(e){
+        var data = e.data;
+        var select = document.createElement('select');
+        select.id = 'dropdown';
+        select.options.add(new Option(e.title, -1));
+
+        for(var i = 0,label; label = data[i];i++)select.options.add(new Option(label.name,label.email ? label.email: ''));
+        $('.cd-dropdown').replaceWith(select);
+        $( '#dropdown' ).dropdown(opt);
+        setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
+      };
+      var replace_groups = function(e){
+        var data = e.data;
+        var select = document.createElement('select');
+        select.id = 'dropdown';
+        select.options.add(new Option(e.title, -1));
+        for(var i = 0,label; label = data[i];i++) select.options.add(new Option(label.name,label.id));
+        $('.cd-dropdown').replaceWith(select);
+        $( '#dropdown' ).dropdown(opt);
+        setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
+        $('ul').on('opened.click.dropdown', retrive_contacts_by_group);
+      };
+
+			$( function() {
+          window.document.addEventListener('gc.init.success', function(){
+              Gcontacts.init(parameters);
+          });
+          $(dropdown).dropdown(opt);
+          window.document.addEventListener('gc.ready.success', function(){
+            window.document.addEventListener('gc.contacts.success',replace_contacts);
+            window.document.addEventListener('gc.groups.success',replace_groups);
+            window.document.addEventListener('gc.login.success',retrive_groups);
+            $('.cd-dropdown span:first').on('click', Gcontacts.login);
+            }
+          );
+          }
+      );
+
+		</script>
+	</body>
+</html>
