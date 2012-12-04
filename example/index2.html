@@ -54,25 +54,26 @@
 					delay : 100,
 					random : true
       };
-      var replace_contacts = function(e){
-      };
       var retrive_contacts_by_group =  function(e){
-       Gcontacts.contacts_by_group(e.target.textContent);
+        console.log(e.value)
+        e.value == '_back' ? Gcontacts.groups() : Gcontacts.contacts_by_group(e.value);
       }
       var retrive_groups = function(e){
         $('.cd-dropdown span:first').off('click');
         Gcontacts.groups();
       };
       var replace_contacts = function(e){
-        var data = e.data;
+        console.log(e);
         var select = document.createElement('select');
         select.id = 'dropdown';
         select.options.add(new Option(e.title, -1));
-
-        for(var i = 0,label; label = data[i];i++)select.options.add(new Option(label.name,label.email ? label.email: ''));
+        for(var i = 0,label; label = e.data[i];i++)select.options.add(new Option(label.name,label.email));
+        select.options.add(new Option('back','_back'))
         $('.cd-dropdown').replaceWith(select);
         $( '#dropdown' ).dropdown(opt);
+
         setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
+        $('ul').on('opened.click.dropdown', retrive_contacts_by_group);
       };
       var replace_groups = function(e){
         var data = e.data;

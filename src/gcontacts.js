@@ -75,7 +75,7 @@ var Gcontacts = (function(){
     return [(href ? href : config.url), url.join('&')].join('?');
   };
   var login = function( event, href ){
-    if (!token_data.valid){
+    if (!token_data.state){
       if(parameters.check_config)
         window.open(auth(href), '_blank', ['toolbar=no', 'location= '+ (window.opera ? 'no' : 'yes'), 'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no', 'width=' + window.screen.width / 2, 'height='+ window.screen.height / 2 ].join())
 
@@ -144,7 +144,7 @@ var Gcontacts = (function(){
     if(!raw.state){
       var _groups = [];
       for(var i = 0, group; group = groups.feed.entry[i]; i++)
-        _groups.push(Object.create({},{ name: {value: group.title.$t}, id: {value: group.id.$t}}));
+        _groups.push(Object.create({},{ name: {value: group.title.$t || ''}, id: {value: group.id.$t ||''}}));
     }
     result = groups.feed ? 'success' : 'fail';
     if( result == 'success' )
@@ -156,23 +156,23 @@ var Gcontacts = (function(){
     events.trigger = ['groups',result];
   };
   var get_contacts_response = function(){
+    var _contacts = [];
     if(!raw.state){
-      var _contacts = [];
-      for(var i = 0,contact; contact = contacts.feed.entry[i]; i++)
-        _contacts.push(Object.create({},{ name: {value: contact.title.$t}, email: {value: contact.gd$email}}));
-    }
-    result = contacts.feed ? 'success' : 'fail';
-    if( result == 'success' )
-      {
-        events.groups[result].author = groups.feed.author[0];
-        events.groups[result].title = groups.feed.title.$t;
+      if( contacts.feed.entry && contacts.feed.entry.length != 0 ){
+        for(var i = 0,contact; contact = contacts.feed.entry[i]; i++)
+          _contacts.push(Object.create({},{ name: {value: contact.title.$t|| ''}, email: {value: contact.gd$email || ''}}));
       }
+    }
+    result = contacts.feed && contacts.feed.entry ? 'success' : 'fail';
     events.contacts[result].data = _contacts ? _contacts : contacts;
+    events.contacts[result].author =   groups.feed.author[0];
+    events.contacts[result].title =    groups.feed.title.$t;
     events.trigger = ['contacts',result];
   };
   var get_id_group = function(group_name){
+   if(groups.feed && groups.feed.entry)
     for(var i=0,group;group = groups.feed.entry[i];i++)
-    if(group.title.$t == group_name) return group.id.$t
+      if(group.title.$t == group_name) return group.id.$t
   };
   var get_contacts_by_group = function(group_name){
     if((/^http(s?):\/\//).test(group_name))
@@ -180,7 +180,7 @@ var Gcontacts = (function(){
       else{
         if(groups.feed != undefined){
           group = get_id_group(group_name);
-          if(group != '')
+          if(group)
             get_group(group);
           else throw ['group',group_name,'not found'].join(' ');
         }else throw 'need get the contacts groups first with groups();';
