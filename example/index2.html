@@ -41,7 +41,8 @@
 		</div><!-- /container -->
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
-    <script onload=Gcontacts._ready(); src='../src/Gcontacts.js' async='async'></script>
+		<script type="text/javascript" src="js/functions.js"></script>
+    <script src='../src/Gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
 		<script type="text/javascript">
       var parameters = {
         response_type: 'token',
@@ -54,54 +55,20 @@
 					delay : 100,
 					random : true
       };
-      var retrive_contacts_by_group =  function(e){
-        console.log(e.value)
-        e.value == '_back' ? Gcontacts.groups() : Gcontacts.contacts_by_group(e.value);
-      }
-      var retrive_groups = function(e){
-        $('.cd-dropdown span:first').off('click');
-        Gcontacts.groups();
-      };
-      var replace_contacts = function(e){
-        console.log(e);
-        var select = document.createElement('select');
-        select.id = 'dropdown';
-        select.options.add(new Option(e.title, -1));
-        for(var i = 0,label; label = e.data[i];i++)select.options.add(new Option(label.name,label.email));
-        select.options.add(new Option('back','_back'))
-        $('.cd-dropdown').replaceWith(select);
-        $( '#dropdown' ).dropdown(opt);
-
-        setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
-        $('ul').on('opened.click.dropdown', retrive_contacts_by_group);
-      };
-      var replace_groups = function(e){
-        var data = e.data;
-        var select = document.createElement('select');
-        select.id = 'dropdown';
-        select.options.add(new Option(e.title, -1));
-        for(var i = 0,label; label = data[i];i++) select.options.add(new Option(label.name,label.id));
-        $('.cd-dropdown').replaceWith(select);
-        $( '#dropdown' ).dropdown(opt);
-        setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
-        $('ul').on('opened.click.dropdown', retrive_contacts_by_group);
-      };
-
+		</script>
+		<script type="text/javascript">
 			$( function() {
-          window.document.addEventListener('gc.init.success', function(){
-              Gcontacts.init(parameters);
-          });
           $(dropdown).dropdown(opt);
-          window.document.addEventListener('gc.ready.success', function(){
-            window.document.addEventListener('gc.contacts.success',replace_contacts);
-            window.document.addEventListener('gc.groups.success',replace_groups);
-            window.document.addEventListener('gc.login.success',retrive_groups);
+          window.document.addEventListener('success.ready.gc', function(){
+            Gcontacts.init(parameters);
+            window.document.addEventListener('success.login.gc',retrive_groups);
+            window.document.addEventListener('success.groups.gc',replace_groups);
+            window.document.addEventListener('success.contacts.gc',replace_contacts);
             $('.cd-dropdown span:first').on('click', Gcontacts.login);
             }
           );
           }
       );
-
 		</script>
 	</body>
 </html>
