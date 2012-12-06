@@ -29,7 +29,7 @@
 			<section class="main clearfix">
 				<div class="fleft">
           <a href="#"></a>
-					<p>In this example we use the librery Gcontacts to retrive the groups in your Gmail and if you pick one we show his members.</p>
+					<p>In this example we use the library Gcontacts to retrive the groups in your Gmail and if you pick one, we show his members.</p>
 				</div>
         <div id='clicker' class="fleft">
           <select id="dropdown" class="cd-select">
@@ -39,11 +39,8 @@
       </div>
 			</section>
 		</div><!-- /container -->
-		<script type="text/javascript" src="js/jquery.min.js"></script>
-		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
-		<script type="text/javascript" src="js/functions.js"></script>
-    <script src='../src/Gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
-		<script type="text/javascript">
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript">
       var parameters = {
         response_type: 'token',
         client_id: '896644733940.apps.googleusercontent.com',
@@ -69,6 +66,9 @@
           );
           }
       );
-		</script>
+    </script>
+		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
+		<script type="text/javascript" src="js/functions.js"></script>
+    <script type="text/javascript" src='js/Gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
 	</body>
 </html>
