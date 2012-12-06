@@ -30,7 +30,6 @@ var retrive_contact_info = function(e){
       var select = create_element();
       var title = $(e.target).find('span:first').text();
       select.options.add(new Option(title, -1));
-      console.log(addresses.length)
       if( addresses.length < 2 && addresses[0] == 'empty' )
         select.options.add(new Option('no info about him/her yet', -2));
       else
@@ -44,7 +43,6 @@ var retrive_contact_info = function(e){
   }
   }
 var replace_contacts = function(e){
-  console.log('replace_contacts')
   var title = window._reference ? window._reference.title : $('.cd-dropdown span:first').text();
   var data = e.data;
   var select = create_element();
@@ -54,21 +52,25 @@ var replace_contacts = function(e){
     {
       var emails = [];
       if( typeof( label.email ) !== 'string' )
-        for(var j = 0, email; email = label.email[j]; j++)
+        for(var j = 0, email,name; email = label.email[j]; j++)
           emails.push(email.address);
-      select.options.add(new Option(label.name, ( emails.length > 0 ) ? emails.join(' ') : 'empty'));
+          name = label.name.length < 20 ? label.name : [label.name.slice(0,20),'...'].join('');
+      select.options.add(new Option(name, ( emails.length > 0 ) ? emails.join(' ') : 'empty'));
     }
   select.options.add(new Option('back','from_contacts'))
   trade_of(select);
   $('ul').on('opened.click.dropdown', retrive_contact_info);
 };
 var replace_groups = function(e){
-  console.log('replace_groups')
   var data = e.data;
   var select = create_element();
-  select.options.add(new Option(e.title, -1));
-  for(var i = 0,label; label = data[i];i++)
+  var title = ( e.title.length < 20 ) ? e.title : [ e.title.slice(0,20),'...'].join('');
+  select.options.add(new Option(title, -1));
+  for(var i = 0,label,name; label = data[i];i++){
+    name = ( label.name.length < 20 ) ? label.name : [label.name.slice(0,20),'...'].join('');
     select.options.add(new Option(label.name,label.id));
+  }
+
   trade_of(select);
   $('ul').on('opened.click.dropdown', retrive_from);
 };
