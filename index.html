@@ -41,6 +41,23 @@
 		</div><!-- /container -->
     <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript">
+      var opts = {
+       lines: 13, // The number of lines to draw
+       length: 6, // The length of each line
+       width: 2, // The line thickness
+       radius: 3, // The radius of the inner circle
+       corners: 1, // Corner roundness (0..1)
+       rotate: 3, // The rotation offset
+       color: '#000', // #rgb or #rrggbb
+       speed: 1.4, // Rounds per second
+       trail: 34, // Afterglow percentage
+       shadow: false, // Whether to render a shadow
+       hwaccel: false, // Whether to use hardware acceleration
+       className: 'spinner', // The CSS class to assign to the spinner
+       zIndex: 2e9, // The z-index (defaults to 2000000000)
+       top: 'auto', // Top position relative to parent in px
+       left: '70' // Left position relative to parent in px
+      };
       var parameters = {
         response_type: 'token',
         client_id: '896644733940.apps.googleusercontent.com',
@@ -58,6 +75,7 @@
           $(dropdown).dropdown(opt);
           window.document.addEventListener('success.ready.gc', function(){
             Gcontacts.init(parameters);
+            window.spinner = new Spinner(opts);
             window.document.addEventListener('success.login.gc',retrive_groups);
             window.document.addEventListener('success.groups.gc',replace_groups);
             window.document.addEventListener('success.contacts.gc',replace_contacts);
@@ -69,6 +87,7 @@
     </script>
 		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
 		<script type="text/javascript" src="js/functions.js"></script>
+		<script type="text/javascript" src="//fgnass.github.com/spin.js/dist/spin.min.js"></script>
     <script type="text/javascript" src='//github.com/eventioz/gcontacts/raw/master/src/gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
 	</body>
 </html>

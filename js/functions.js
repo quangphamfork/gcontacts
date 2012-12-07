@@ -2,16 +2,20 @@ var trade_of = function(select){
   $('.cd-dropdown').replaceWith(select);
   $(dropdown).dropdown(opt);
   setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
-  $('ul').on('opened.click.dropdown');
+  $('ul').off('opened.click.dropdown');
+  spinner.stop();
 };
 var retrive_from =  function(e){
+  spinner.spin($('.cd-dropdown span:first')[0]);
   ( e.value ==  'from_contacts' ) ?  Gcontacts.groups() : Gcontacts.contacts_by_group(e.value);
 };
 var retrive_groups = function(e){
   $('.cd-dropdown span:first').off('click');
+  spinner.spin($('.cd-dropdown span:first')[0]);
   Gcontacts.groups();
 };
 var go_back_from_contacts = function(e){
+  spinner.spin($('.cd-dropdown span:first')[0]);
   Gcontacts.contacts_by_group(window._reference.id);
 
 }
@@ -19,10 +23,11 @@ var retrive_contact_info = function(e){
   switch(e.value){
 
     case ( /^http:/ ).test(e.value) :
+      spinner.spin($('.cd-dropdown span:first')[0]);
       Gcontacts.contact_by_group(e.value);
       break;
-
     case 'from_contacts':
+      spinner.spin($('.cd-dropdown span:first')[0]);
       Gcontacts.groups();
       break;
     default:
@@ -41,7 +46,7 @@ var retrive_contact_info = function(e){
       $('ul').on('opened.click.dropdown', go_back_from_contacts);
       break;
   }
-  }
+};
 var replace_contacts = function(e){
   var title = window._reference ? window._reference.title : $('.cd-dropdown span:first').text();
   var data = e.data;
