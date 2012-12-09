@@ -1,6 +1,6 @@
 var trade_of = function(select){
   $('.cd-dropdown').replaceWith(select);
-  $(dropdown).dropdown(opt);
+  $(dropdown).dropdown(random_dropdownEffect());
   setTimeout(function(){$('.cd-dropdown span:first').trigger('mousedown.dropdown')},250);
   $('ul').off('opened.click.dropdown');
   spinner.stop();
@@ -83,4 +83,10 @@ var create_element = function(){
   var select = document.createElement('select');
   select.id = 'dropdown';
   return select;
+}
+var random_dropdownEffect = function(){
+  var index = Math.floor(Math.random() * dropEffects.length);
+  var picked = dropEffects[index];
+  console.log(picked, index);
+return picked
 }

@@ -16,6 +16,11 @@
 			<!-- Codrops top bar -->
 			<div class="codrops-top clearfix">
 				<span class="right">
+					<a href="http://github.com/eventioz/gcontacts">
+						<strong>Gcontacts on GitHub</strong>
+					</a>
+				</span>
+        <span class="right">
 					<a href="http://github.com/gagoar">
 						<strong>Gagoar on GitHub</strong>
 					</a>
@@ -29,7 +34,7 @@
 			<section class="main clearfix">
 				<div class="fleft">
           <a href="#"></a>
-					<p>In this example we use the library Gcontacts to retrive the groups in your Gmail and if you pick one, we show his members.</p>
+					<p>In this example we use the library Gcontacts to retrive the groups in your Gmail and if you pick one we show his members.</p>
 				</div>
         <div id='clicker' class="fleft">
           <select id="dropdown" class="cd-select">
@@ -64,15 +69,16 @@
         scope: 'https://www.google.com/m8/feeds',
         inmediate: 'true'
       };
-      var opt =  {
-					gutter : 5,
-					delay : 100,
-					random : true
-      };
+      var dropEffects = [ { gutter : 5, delay : 100, random : true },
+                         { gutter : 5, stack : false, slidingIn : 100 },
+                         { gutter : 5, stack : false, delay : 100, slidingIn : 100 },
+                         {}
+                       ];
+
 		</script>
 		<script type="text/javascript">
 			$( function() {
-          $(dropdown).dropdown(opt);
+          $(dropdown).dropdown(random_dropdownEffect());
           window.document.addEventListener('success.ready.gc', function(){
             Gcontacts.init(parameters);
             window.spinner = new Spinner(opts);
