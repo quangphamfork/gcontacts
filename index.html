@@ -85,6 +85,8 @@
             window.document.addEventListener('success.login.gc',retrive_groups);
             window.document.addEventListener('success.groups.gc',replace_groups);
             window.document.addEventListener('success.contacts.gc',replace_contacts);
+            window.document.addEventListener('fail.contacts.gc',no_contacts_found);
+            window.document.addEventListener('fail.groups.gc',no_groups_found);
             $('.cd-dropdown span:first').on('click', Gcontacts.login);
             }
           );

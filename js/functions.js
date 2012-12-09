@@ -83,10 +83,24 @@ var create_element = function(){
   var select = document.createElement('select');
   select.id = 'dropdown';
   return select;
-}
+};
+var no_groups_found = function(e){
+  var select = create_element();
+  select.options.add(new Option(e.title, -1));
+  select.options.add(new Option('no groups, try again later!', '2' ));
+  trade_of(select);
+  $('ul').on('opened.click.dropdown', Gcontacts.groups);
+};
+var no_contacts_found = function(e){
+  var select = create_element();
+  select.options.add(new Option(e.title, -1));
+  select.options.add(new Option('no contacts here!', '1'));
+  select.options.add(new Option('go back!', '2' ));
+  trade_of(select);
+  $('ul').on('opened.click.dropdown', Gcontacts.groups);
+};
 var random_dropdownEffect = function(){
   var index = Math.floor(Math.random() * dropEffects.length);
   var picked = dropEffects[index];
-  console.log(picked, index);
-return picked
+  return picked
 }
