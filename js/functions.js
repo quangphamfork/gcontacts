@@ -10,11 +10,13 @@ var retrive_from =  function(e){
   ( e.value ==  'from_contacts' ) ?  Gcontacts.groups() : Gcontacts.contacts_by_group(e.value);
 };
 var retrive_groups = function(e){
+  delete window._reference
   $('.cd-dropdown span:first').off('click');
   spinner.spin($('.cd-dropdown span:first')[0]);
   Gcontacts.groups();
 };
 var go_back_from_contacts = function(e){
+  $('.cd-dropdown span:first').text(window._reference.title);
   spinner.spin($('.cd-dropdown span:first')[0]);
   Gcontacts.contacts_by_group(window._reference.id);
 
@@ -24,6 +26,7 @@ var retrive_contact_info = function(e){
 
     case ( /^http:/ ).test(e.value) :
       spinner.spin($('.cd-dropdown span:first')[0]);
+    $('.cd-dropdown span:first').text(window._reference.title);
       Gcontacts.contact_by_group(e.value);
       break;
     case 'from_contacts':
@@ -48,7 +51,7 @@ var retrive_contact_info = function(e){
   }
 };
 var replace_contacts = function(e){
-  var title = window._reference ? window._reference.title : $('.cd-dropdown span:first').text();
+  var title = window._reference && window._reference.title || $('.cd-dropdown span:first').text();
   var data = e.data;
   var select = create_element();
   select.options.add(new Option(title, -1));
@@ -67,6 +70,7 @@ var replace_contacts = function(e){
   $('ul').on('opened.click.dropdown', retrive_contact_info);
 };
 var replace_groups = function(e){
+  delete window._reference
   var data = e.data;
   var select = create_element();
   var title = ( e.title.length < 20 ) ? e.title : [ e.title.slice(0,20),'...'].join('');
@@ -89,15 +93,16 @@ var no_groups_found = function(e){
   select.options.add(new Option(e.title, -1));
   select.options.add(new Option('no groups, try again later!', '2' ));
   trade_of(select);
-  $('ul').on('opened.click.dropdown', Gcontacts.groups);
+  $('ul').on('opened.click.dropdown', retrive_groups);
 };
 var no_contacts_found = function(e){
   var select = create_element();
-  select.options.add(new Option(e.title, -1));
+  var title = $('.cd-dropdown span:first').text();
+  select.options.add(new Option(title, -1));
   select.options.add(new Option('no contacts here!', '1'));
   select.options.add(new Option('go back!', '2' ));
   trade_of(select);
-  $('ul').on('opened.click.dropdown', Gcontacts.groups);
+  $('ul').on('opened.click.dropdown', retrive_groups);
 };
 var random_dropdownEffect = function(){
   var index = Math.floor(Math.random() * dropEffects.length);
