@@ -1,5 +1,5 @@
 var Gcontacts = (function(){
-  var raw = { val: false, get on(){this.val = Boolean(true)}, get off(){this.val = Boolean(false)}, get state(){return this.val}};
+  var raw = { val: !1, get on(){this.val = !0}, get off(){this.val = !1}, get state(){return this.val}};
   var config = {
     url: 'https://accounts.google.com/o/oauth2/auth',
     origin: window.location.href.replace(window.location.pathname,''),
@@ -17,12 +17,12 @@ var Gcontacts = (function(){
     get check_config(){
       if(this.isBlank)
         throw 'parameters are different than we spect!';
-      return true;
+      return !0;
     },
     get isBlank(){
       for(property in this.params)
-        if(this.params[property] == '') return true;
-      return false;
+        if(this.params[property] == '') return !0;
+      return !1;
     },
     get show(){
       return this.params;
@@ -36,7 +36,7 @@ var Gcontacts = (function(){
     get token(){ if(token_data.valid) return token_data.access_token }
   };
   var token_data = {
-    valid: false,
+    valid: !1,
     expire_date: '',
     get isSet(){return this.access_token != undefined && this.expires_in != undefined},
     get state(){ return ( this.valid && (this.expire_date > new Date()) ) },
@@ -44,7 +44,7 @@ var Gcontacts = (function(){
     this.valid = val;
     if(val){
         var msec = Number(token_data.expires_in) * Number(1000);
-        window._GcontactsTokenTimeout = setTimeout(function(){ token_data.state = false}, msec);
+        window._GcontactsTokenTimeout = setTimeout(function(){ token_data.state = !1}, msec);
         this.expire_date = new Date();
         this.expire_date.setHours( this.expire_date.getHours() + 1);
         events.trigger = ['login','success'];
@@ -99,7 +99,7 @@ var Gcontacts = (function(){
         parameters.params[attr] = config[attr];
       parameters.check_config;
       events.create = ['login','contacts','groups'];
-      window.addEventListener('message', message,  false);
+      window.addEventListener('message', message,  !1);
     }else throw 'wrong initialization';
   };
   var message = function(event){
@@ -109,7 +109,7 @@ var Gcontacts = (function(){
       token_data[content[0].replace(/^#/,'')] = content[1];
     }
     if(token_data.isSet){
-      token_data.state = true;
+      token_data.state = !0;
     }else
       events.trigger = ['login','fail'];
   };
@@ -119,7 +119,7 @@ var Gcontacts = (function(){
     url +=  ['&callback',callback].join('=');
     var groups_element = document.createElement("script");
     groups_element.src = url;
-    groups_element.async = true;
+    groups_element.async = !0;
     groups_element.onload = cleanup;
     document.body.appendChild(groups_element);
   };
@@ -146,13 +146,15 @@ var Gcontacts = (function(){
     }else throw 'invalid token';
   };
   var get_groups_response =  function(){
+   if(groups.feed && groups.feed.entry)
     if(!raw.state){
       var _groups = [];
       for(var i = 0, group; group = groups.feed.entry[i]; i++)
         _groups.push(Object.create({},{ name: {value: group.title.$t || ''}, id: {value: group.id.$t ||''}}));
     }
+
     result =  groups.feed && groups.feed.entry  ? 'success' : 'fail';
-    if( result == 'success' ){
+    if( groups.feed ){
         events.groups[result].author = groups.feed.author[0];
         events.groups[result].title  = groups.feed.title.$t;
     }
@@ -168,9 +170,9 @@ var Gcontacts = (function(){
       }
     }
     result = contacts.feed && contacts.feed.entry ? 'success' : 'fail';
-    if( result == 'success' ){
-     events.contacts[result].author = groups.feed.author[0];
-     events.contacts[result].title  = groups.feed.title.$t;
+    if( contacts.feed ){
+     events.contacts[result].author = contacts.feed.author[0];
+     events.contacts[result].title  = contacts.feed.title.$t;
     }
     events.contacts[result].reference = contacts._lastRef;
     events.contacts[result].data = _contacts ? _contacts : contacts;
@@ -178,7 +180,7 @@ var Gcontacts = (function(){
   };
   var get_id_group = function(group_name){
    if(groups.feed && groups.feed.entry)
-    for(var i=0,group;group = groups.feed.entry[i];i++)
+    for(var i = 0,group;group = groups.feed.entry[i];i++)
       if(group.title.$t == group_name) return group.id.$t
   };
   var get_contacts_by_group = function(group_name){
