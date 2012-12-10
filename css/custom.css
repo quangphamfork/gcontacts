@@ -8,8 +8,8 @@ i[class^="icon-"], i[class*=" icon-"]{
 }
 /* -- overriding some styles -- */
 i[class^="icon-"]:before, i[class*=" icon-"]:before, i[class^="icon-"]:after, i[class*=" icon-"]:after{
-  display:none;
-  content:"";
+	display:none;
+	content:"";
 }
 /* -- srpite --*/
 i.icon-firefox{
@@ -29,9 +29,5 @@ i.icon-opera{
 }
 /* -- custom title for browsers -- */
 .browsers-title{
-  margin-bottom: 16px;
-}
-/*effects*/
-i[class^="icon-"]:hover, i[class*=" icon-"]:hover{
-  
+	margin-bottom: 16px;
 }
