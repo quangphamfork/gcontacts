@@ -9,7 +9,8 @@
 		<meta name="keywords" content="Gcontacts, google, gmail, contacts, js, javascript" />
 		<meta name="author" content="Gagoar" />
 		<link rel="stylesheet" type="text/css" href="css/style2.css" />
-    <script src="js/modernizr.custom.63321.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/custom.css" />
+		<script src="js/modernizr.custom.63321.js"></script>
 	</head>
 	<body>
 		<div class="container">
@@ -20,7 +21,7 @@
 						<strong>Gcontacts on GitHub</strong>
 					</a>
 				</span>
-        <span class="right">
+				<span class="right">
 					<a href="http://github.com/gagoar">
 						<strong>Gagoar on GitHub</strong>
 					</a>
@@ -29,73 +30,81 @@
 			<header class="clearfix">
 				<h1>Gcontacts<span>for retrive contacts from Gmail</span></h1>
 				<nav class="codrops-demos">
+					<h5 class="browsers-title">Tested in:</h5>
+					<p>
+						<i class="icon-firefox"></i>
+						<i class="icon-explorer"></i>
+						<i class="icon-safari"></i>
+						<i class="icon-chrome"></i>
+						<i class="icon-opera"></i>
+					</p>
 				</nav>
 			</header>
 			<section class="main clearfix">
 				<div class="fleft">
-          <a href="#"></a>
+					<a href="#"></a>
 					<p>In this example we use the library Gcontacts to retrive the groups in your Gmail and if you pick one we show his members.</p>
 				</div>
-        <div id='clicker' class="fleft">
-          <select id="dropdown" class="cd-select">
-            <option value="-1" selected>Show me my groups!</option>
-          </select>
-        </div>
-      </div>
+				<div id='clicker' class="fleft">
+					<select id="dropdown" class="cd-select">
+						<option value="-1" selected>Show me my groups!</option>
+					</select>
+				</div>
+			</div>
 			</section>
 		</div><!-- /container -->
-    <script type="text/javascript" src="js/jquery.min.js"></script>
-    <script type="text/javascript">
-      var opts = {
-       lines: 13,
-       length: 6,
-       width: 2,
-       radius: 3,
-       corners: 1,
-       rotate: 3,
-       color: '#000',
-       speed: 1.4,
-       trail: 34,
-       shadow: false,
-       hwaccel: false,
-       className: 'spinner',
-       zIndex: 2e9,
-       top: 'auto',
-       left: '70'
-      };
-      var parameters = {
-        response_type: 'token',
-        client_id: '896644733940.apps.googleusercontent.com',
-        scope: 'https://www.google.com/m8/feeds',
-        inmediate: 'true'
-      };
-      var dropEffects = [ { gutter : 5, delay : 100, random : true },
-                         { gutter : 5, stack : false, slidingIn : 100 },
-                         { gutter : 5, stack : false, delay : 100, slidingIn : 100 },
-                         {}
-                       ];
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript">
+			var opts = {
+			 lines: 13,
+			 length: 6,
+			 width: 2,
+			 radius: 3,
+			 corners: 1,
+			 rotate: 3,
+			 color: '#000',
+			 speed: 1.4,
+			 trail: 34,
+			 shadow: false,
+			 hwaccel: false,
+			 className: 'spinner',
+			 zIndex: 2e9,
+			 top: 'auto',
+			 left: '70'
+			};
+			var parameters = {
+				response_type: 'token',
+				client_id: '896644733940.apps.googleusercontent.com',
+				scope: 'https://www.google.com/m8/feeds',
+				inmediate: 'true'
+			};
+			var dropEffects = [ { gutter : 5, delay : 100, random : true },
+												 { gutter : 5, stack : false, slidingIn : 100 },
+												 { gutter : 5, stack : false, delay : 100, slidingIn : 100 },
+												 {}
+											 ];
 
 		</script>
 		<script type="text/javascript">
 			$( function() {
-          $(dropdown).dropdown(random_dropdownEffect());
-          window.document.addEventListener('success.ready.gc', function(){
-            Gcontacts.init(parameters);
-            window.spinner = new Spinner(opts);
-            window.document.addEventListener('success.login.gc',retrive_groups);
-            window.document.addEventListener('success.groups.gc',replace_groups);
-            window.document.addEventListener('success.contacts.gc',replace_contacts);
-            window.document.addEventListener('fail.contacts.gc',no_contacts_found);
-            window.document.addEventListener('fail.groups.gc',no_groups_found);
-            $('.cd-dropdown span:first').on('click', Gcontacts.login);
-            }
-          );
-          }
-      );
-    </script>
+					$(dropdown).dropdown(random_dropdownEffect());
+					window.document.addEventListener('success.ready.gc', function(){
+						Gcontacts.init(parameters);
+						window.spinner = new Spinner(opts);
+						window.document.addEventListener('success.login.gc',retrive_groups);
+						window.document.addEventListener('success.groups.gc',replace_groups);
+						window.document.addEventListener('success.contacts.gc',replace_contacts);
+						window.document.addEventListener('fail.contacts.gc',no_contacts_found);
+						window.document.addEventListener('fail.groups.gc',no_groups_found);
+						$('.cd-dropdown span:first').on('click', Gcontacts.login);
+						}
+					);
+					}
+			);
+		</script>
 		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
 		<script type="text/javascript" src="js/functions.js"></script>
 		<script type="text/javascript" src="//fgnass.github.com/spin.js/dist/spin.min.js"></script>
-    <script type="text/javascript" src='//github.com/eventioz/gcontacts/raw/master/src/gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
+		<script type="text/javascript" src='//github.com/eventioz/gcontacts/raw/master/src/gcontacts.js' async='async' onload=Gcontacts._ready() ></script>
 	</body>
 </html>
