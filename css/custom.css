@@ -1,0 +1,37 @@
+/*browsers icons*/
+i[class^="icon-"], i[class*=" icon-"]{
+	 display: inline-block;
+	 width: 24px;
+	 height: 24px;
+	 background:url(../images/browsers.png) left top no-repeat;
+	 background-size: 120px;
+}
+/* -- overriding some styles -- */
+i[class^="icon-"]:before, i[class*=" icon-"]:before, i[class^="icon-"]:after, i[class*=" icon-"]:after{
+  display:none;
+  content:"";
+}
+/* -- srpite --*/
+i.icon-firefox{
+	background-position: left top;
+}
+i.icon-explorer{
+	background-position: -24px top;
+}
+i.icon-safari{
+	background-position: -48px top;
+}
+i.icon-chrome{
+	background-position: -71px top;
+}
+i.icon-opera{
+	background-position: right top;
+}
+/* -- custom title for browsers -- */
+.browsers-title{
+  margin-bottom: 16px;
+}
+/*effects*/
+i[class^="icon-"]:hover, i[class*=" icon-"]:hover{
+  
+}
