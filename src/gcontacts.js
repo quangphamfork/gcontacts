@@ -54,18 +54,31 @@ var Gcontacts = (function(){
     }
   };
   var events = {
+    events: {},
     set create(evts){
+      var dom = window.document;
       var family = 'gc';
-      for(var i = 0,event; event = evts[i];i++)
-        events[event] = {
-                         success: new CustomEvent(['success',event,family].join('.')),
-                         fail: new CustomEvent(['fail',event,family].join('.'))
-                        }
-    },
+      if( window.CustomEvent ){
+        for(var i = 0, event; event = evts[i]; i++)
+          events[event] = {
+                            success: new CustomEvent(['success',event,family].join('.')),
+                            fail: new CustomEvent(['fail',event,family].join('.'))
+                          }
+      }
+      else{
+        for(var i = 0, event; event = evts[i]; i++)
+          events[event] = {
+                            success: dom.createElement('Event').initEvent(['success',event,family].join('.'), false, false),
+                            fail: dom.createElement('Event').initEvent(['fail',event,family].join('.'), false, false)
+                          }
+      }
+      },
     set trigger(evt){
+      var dom = window.document;
       var event = events[evt[0]][evt[1]];
-      var doc = window.document;
-      doc.createEvent ? doc.dispatchEvent(event) :  doc.fireEvent('on' + event.eventType, event);
+      dom.dispatchEvent ?
+        dom.dispatchEvent(event) :
+        dom.fireEvent('on' + event.eventType, event);
     }
   };
   var contacts = {};
@@ -211,6 +224,7 @@ var Gcontacts = (function(){
       events.trigger = ['ready','success'];
   };
   return{
+    _event: events,
     raw: raw,
     init: init,
     login: login,
