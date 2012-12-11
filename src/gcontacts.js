@@ -258,7 +258,6 @@ var Gcontacts = (function () {
     events.trigger = ['ready', 'success'];
   };
   return {
-    _event: events,
     raw: raw,
     init: init,
     login: login,
