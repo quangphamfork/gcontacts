@@ -70,12 +70,15 @@ var Gcontacts = (function () {
       this.valid = val;
       if (val) {
         var msec = Number(token_data.expires_in) * Number(1000);
-        window._GcontactsTokenTimeout = setTimeout( "token_data.state = false;", msec);
+        window._GcontactsTokenTimeout = setTimeout( "Gcontacts.logout();", msec);
         this.expire_date = new Date();
         this.expire_date.setHours(this.expire_date.getHours() + 1);
         events.trigger = ['login', 'success'];
         console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
-      } else throw (['token expired on', Date()].join(' '));
+      } else {
+        events.trigger = ['logout', 'success'];
+        throw (['token expired on', Date()].join(' '));
+      }
     }
   };
   var events = {
@@ -120,6 +123,9 @@ var Gcontacts = (function () {
 
     } else throw 'you are good to go!'
   };
+  var logout = function () {
+      token_data.state = false;
+  };
   var init = function (config) {
     if (window.location.hash !== '') {
       var origin_url = window.location.origin || window.location.protocol + window.location.host;
@@ -132,7 +138,7 @@ var Gcontacts = (function () {
       for(var attr in config)
         parameters.params[attr] = config[attr];
       parameters.check_config;
-      events.create = ['login', 'contacts', 'groups'];
+      events.create = ['login', 'logout', 'contacts', 'groups'];
       window.addEventListener('message', message, false);
     } else throw 'wrong initialization';
   };
@@ -261,6 +267,7 @@ var Gcontacts = (function () {
     raw: raw,
     init: init,
     login: login,
+    logout: logout,
     groups: get_groups,
     contacts_by_group: get_contacts_by_group,
     _answer: get_response,
