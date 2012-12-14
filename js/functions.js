@@ -1,11 +1,12 @@
 var trade_of = function(select) {
   $('.cd-dropdown').replaceWith(select);
-  $(dropdown).dropdown(random_dropdownEffect());
+  $('#dropdown').dropdown(random_dropdownEffect());
   setTimeout(function() {
-    $('.cd-dropdown span:first').trigger('mousedown.dropdown')
+    $('.cd-dropdown span:first').trigger('mousedown.dropdown');
   }, 250);
   $('ul').off('opened.click.dropdown');
   spinner.stop();
+
 };
 var go_back_from_groups = function(e) {
   spinner.spin($('.cd-dropdown span:first')[0]);
@@ -109,4 +110,28 @@ var random_dropdownEffect = function() {
   return picked
 }
 
+var get_gcontacts = function () {
+  var gc = document.createElement('script');
+  var s     = document.getElementsByTagName('script')[0];
+  gc.type   = 'text/javascript';
+  gc.async  = true;
+  gc.src    = (/^gcontacts.info/).test( window.location.host || window.location.hostname ) ?
+    '../src/gcontacts.js'
+    : '//github.com/eventioz/gcontacts/raw/master/src/gcontacts.js'
+  gc.onload = function(){Gcontacts._ready()};
+  s.parentNode.insertBefore(gc, s);
+};
+
+var gcontacts_events = function() {
+  window.document.addEventListener('success.ready.gc', function()
+                                   {
+                                     Gcontacts.init(parameters);
+                                     window.document.addEventListener('success.login.gc',retrive_groups);
+                                     window.document.addEventListener('success.groups.gc',replace_groups);
+                                     window.document.addEventListener('success.contacts.gc',replace_contacts);
+                                     window.document.addEventListener('fail.contacts.gc',no_contacts_found);
+                                     window.document.addEventListener('fail.groups.gc',no_groups_found);
+                                     $('.cd-dropdown span:first').on('click', Gcontacts.login);
+                                   })
+};
 
