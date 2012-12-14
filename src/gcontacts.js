@@ -238,11 +238,10 @@ var Gcontacts = (function () {
     if (group.title.$t == group_name) return group.id.$t
   };
   var get_contacts_by_group = function (group_name) {
-    if ((/^http(s?):\/\//)
-      .test(group_name)) get_group(group_name);
+    if ((/^http(s?):\/\//).test(group_name)) get_group(group_name);
     else {
       if (groups.feed != undefined) {
-        group = get_id_group(group_name);
+        var group = get_id_group(group_name);
         if (group) get_group(group);
         else throw ['group', group_name, 'not found'].join(' ');
       } else throw 'need get the contacts groups first with groups();';
