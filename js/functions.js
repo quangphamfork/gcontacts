@@ -134,4 +134,3 @@ var gcontacts_events = function() {
                                      $('.cd-dropdown span:first').on('click', Gcontacts.login);
                                    })
 };
-
