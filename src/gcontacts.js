@@ -1,29 +1,37 @@
 var Gcontacts = (function () {
   'use strict';
+  var response = []
+  var raw_value = false
+
   var raw = {
-    val: false,
     get on() {
-      this.val = true;
+      raw_value = true
+      return true
     },
     get off() {
-      this.val = false;
+      raw_value = false
+      return true
     },
     get state() {
-      return this.val
+      return raw_value
     }
-  };
+  }
+
+  var internalRandomCode = function() {
+    return Math.floor(Math.random() * 1000)
+  }
   var config = {
     url: 'https://accounts.google.com/o/oauth2/auth',
     origin: window.location.href.replace(window.location.pathname, ''),
     redirect_uri: window.location.href,
     group: {
-      callback: 'Gcontacts._answer',
+      callback: 'Gcontacts._response',
       from: 'https://www.google.com/m8/feeds/groups/default/',
       alt: 'json-in-script',
       projection: 'thin'
     },
     contacts: {
-      callback: 'Gcontacts._answer',
+      callback: 'Gcontacts._response',
       from: 'https://www.google.com/m8/feeds/contacts/default/thin',
       alt: 'json-in-script'
     }
@@ -119,9 +127,18 @@ var Gcontacts = (function () {
   };
   var login = function (event, href) {
     if (!token_data.state) {
-      if (parameters.check_config) window.open(auth(href), '_blank', ['toolbar=no', 'location= ' + (window.opera ? 'no' : 'yes'), 'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no', 'width=' + window.screen.width / 2, 'height=' + window.screen.height / 2].join())
+      if (parameters.check_config)
+        window.open(auth(href),
+        '_blank',
+        ['toolbar=no',
+         'location= ' + (window.opera ? 'no' : 'yes'),
+         'directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no',
+         'width=' + window.screen.width / 2,
+         'height=' + window.screen.height / 2
+        ].join())
 
-    } else throw 'you are good to go!'
+    } else
+      throw 'you are good to go!'
   };
   var logout = function () {
       token_data.state = false;
@@ -155,63 +172,112 @@ var Gcontacts = (function () {
   };
   var cleanup = function () {
     this.parentNode.removeChild(this)
-  };
-  var script_in_dom = function (url, callback) {
-    url += ['&access_token', token_data.access_token].join('=');
-    url += ['&callback', callback].join('=');
-    var groups_element = document.createElement("script");
-    groups_element.src = url;
-    groups_element.async = true;
-    groups_element.onload = cleanup;
-    document.body.appendChild(groups_element);
-  };
-  var get_groups = function () {
-    if (token_data.state) {
-      var group = config.group;
-      var url = group.from + group.projection + '?alt=' + group.alt;
-      script_in_dom(url, group.callback);
-    } else throw 'invalid token';
-  };
-  var get_all_contacts = function () {
-    if (token_data.state) {
-      var contact = config.contacts;
-      var url = [contact.from, '?group=', group_link, '&alt=', contact.alt].join('');
-      script_in_dom(url, contact.callback);
-    } else throw 'invalid token';
-  };
-  var get_group = function (group_link) {
-    if (token_data.state) {
-      var contact = config.contacts;
-      var url = [contact.from, '?group=', group_link, '&alt=', contact.alt].join('');
-      contacts._lastRef = group_link;
-      script_in_dom(url, contact.callback);
-    } else throw 'invalid token';
-  };
-  var get_groups_response = function () {
-    if (groups.feed && groups.feed.entry) if (!raw.state) {
-      var _groups = [];
-      for (var i = 0, group; group = groups.feed.entry[i]; i++)
-      _groups.push(Object.create({}, {
-        name: {
-          value: group.title.$t || ''
-        },
-        id: {
-          value: group.id.$t || ''
-        }
-      }));
-    }
+  }
+  var injectScriptInDom = function (base, params, callback) {
+    var script    = document.createElement('script')
+      , url       = ['?access_token', token_data.access_token].join('=')
 
-    var result = groups.feed && groups.feed.entry ? 'success' : 'fail';
-    if (groups.feed) {
-      events.groups[result].author = groups.feed.author[0];
-      events.groups[result].title = groups.feed.title.$t;
+    url          += ['&callback', callback].join('=')
+    url          += '&' + params.join('&')
+    script.src    = base + url
+    script.async  = true
+    script.onload = cleanup
+
+    document.body.appendChild(script)
+  }
+  var getGroups = function (cb, raw) {
+    if (token_data.state) {
+      var group    = config.group
+        , base     = [group.from, group.projection].join('')
+        , params   = ['alt=' + group.alt]
+        , callback = returnCallback(cb, raw)
+
+      injectScriptInDom(base, params, callback);
+    } else
+      throw 'invalid token'
+  }
+  var returnCallback = function (cb, raw, extras) {
+    if (typeof(cb) == 'function') {
+      var index = internalRandomCode()
+
+      response[index] = raw ? cb : handleResponse(cb, index, extras)
+
+      return 'Gcontacts._answer[' + index + ']'
     }
-    events.groups[result].data = _groups ? _groups : groups;
-    events.trigger = ['groups', result];
+  }
+  var getAllContacts = function (cb, raw) {
+    if (token_data.state) {
+      var contact   = config.contacts
+        , base      = contact.from
+        , params    = [['alt', contact.alt].join('=')]
+        , callback  = returnCallback(cb, raw)
+
+      injectScriptInDom(base, params, callback);
+    } else
+      throw 'invalid token'
   };
+  var getContactsFromGroup = function (groupLink, cb, raw) {
+    if (token_data.state) {
+      if (!(/^http(s?):\/\//).test(groupLink))
+          throw 'malformed Group Link'
+
+      var contact  = config.contacts
+        , callback = returnCallback(cb, raw, {groupLink: groupLink})
+        , params   = [
+                       ['group', groupLink].join('='),
+                       ['alt', contact.alt].join('=')
+                     ]
+
+      injectScriptInDom(contact.from, params, callback);
+    } else
+      throw 'invalid token'
+  }
+  var handleResponse = function (callback, index, extras) {
+    return function (e) {
+      var result = {status: 'fail'}
+
+      if (e.feed) {
+        result = {
+          status : 'success',
+          author : e.feed.author[0],
+          title  : e.feed.title['$t']
+        }
+
+        if (e.feed.entry) {
+          var entries = e.feed.entry
+
+          if (entries.length) {
+            var elements = [];
+
+            for (var i = 0, entry, emails, element; entry = entries[i++];) {
+
+              element = {
+                name     : entry.title['$t'] || 'none given'
+                , id     : entry.id['$t'] || 'no id'
+              }
+
+              emails = entry['gd$email'] || []
+
+              if (emails.length) {
+                element['emails'] = []
+                for (var j = 0, email; email = emails[j++];)
+                 element['emails'].push(email)
+              }
+
+              elements.push(element)
+            }
+
+            result['data']   = elements
+            result['extras'] = extras
+          }
+        }
+      }
+      return callback(result)
+    }
+  }
   var get_contacts_response = function () {
     if (!raw.state) {
-      var _contacts = [];
+      var contacts = [];
       if (contacts.feed.entry && contacts.feed.entry.length != 0) {
         for (var i = 0, contact; contact = contacts.feed.entry[i]; i++)
         _contacts.push(Object.create({}, {
@@ -234,42 +300,38 @@ var Gcontacts = (function () {
     events.trigger = ['contacts', result];
   };
   var get_id_group = function (group_name) {
-    if (groups.feed && groups.feed.entry) for (var i = 0, group; group = groups.feed.entry[i]; i++)
-    if (group.title.$t == group_name) return group.id.$t
-  };
+    if (groups.feed && groups.feed.entry)
+      for (var i = 0, group; group = groups.feed.entry[i++];)
+        if (group.title['$t'] == group_name) return group.id['$t']
+  }
   var get_contacts_by_group = function (group_name) {
-    if ((/^http(s?):\/\//).test(group_name)) get_group(group_name);
+    if ((/^http(s?):\/\//).test(group_name))
+        getContactsFromGroup(group_name)
     else {
-      if (groups.feed != undefined) {
+      if (groups.feed) {
         var group = get_id_group(group_name);
-        if (group) get_group(group);
-        else throw ['group', group_name, 'not found'].join(' ');
-      } else throw 'need get the contacts groups first with groups();';
+        if (group) getGroup(group);
+        else
+          throw ['group', group_name, 'not found'].join(' ');
+      } else
+        throw 'we need the contacts groups first';
     }
   };
-  var get_response = function (res) {
-    if ((/group$/)
-      .test(res.feed.category[0].term)) {
-      groups = res;
-      get_groups_response();
-    } else {
-      res._lastRef = contacts._lastRef;
-      contacts = res;
-      get_contacts_response();
-    }
-  };
+
   var ready = function () {
     events.create = ['ready'];
     events.trigger = ['ready', 'success'];
   };
+  var respond = []
   return {
     raw: raw,
     init: init,
     login: login,
     logout: logout,
-    groups: get_groups,
-    contacts_by_group: get_contacts_by_group,
-    _answer: get_response,
+    getAllContacts: getAllContacts,
+    groups: getGroups,
+    contactsFromGroup: getContactsFromGroup,
+    _answer: response,
     _ready: ready
   };
 }());
