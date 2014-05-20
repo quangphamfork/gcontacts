@@ -10,7 +10,7 @@
 		<meta name="author" content="Gagoar" />
 		<link rel="stylesheet" type="text/css" href="css/style2.css" />
 		<link rel="stylesheet" type="text/css" href="css/custom.css" />
-		<script src="js/modernizr.custom.63321.js"></script>
+    <script src="js/modernizr.custom.63321.js"></script>
 	</head>
 	<body>
 		<div class="container">
@@ -73,21 +73,21 @@
 			 left: '70'
 			};
 			var parameters = {
-				response_type: 'token',
-				client_id: '896644733940.apps.googleusercontent.com',
-				scope: 'https://www.google.com/m8/feeds',
-				inmediate: 'true'
+				response_type : 'token',
+				client_id     : '896644733940.apps.googleusercontent.com',
+				scope         : 'https://www.google.com/m8/feeds',
+				inmediate     : 'true'
 			};
 			var dropEffects = [ { gutter : 5, delay : 100, random : true },
-												 { gutter : 5, stack : false, slidingIn : 100 },
-												 { gutter : 5, stack : false, delay : 100, slidingIn : 100 },
-												 {}
-											 ];
+												  { gutter : 5, stack : false, slidingIn : 100 },
+												  { gutter : 5, stack : false, delay : 100, slidingIn : 100 },
+												  {}
+											 ]
 		</script>
 		<script type="text/javascript">
 			$( function() {
-          get_gcontacts();
-          gcontacts_events();
+          loadGcontacts();
+          bindGcontactsEvents();
           $(dropdown).dropdown(random_dropdownEffect());
           window.spinner = new Spinner(opts);
 					}
