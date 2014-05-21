@@ -2,33 +2,35 @@ var Gcontacts = (function () {
   'use strict';
 
   var response = []
-  var raw_value = false
 
   var internalRandomCode = function() {
     return Math.floor(Math.random() * 1000)
   }
   var config = {
-    url: 'https://accounts.google.com/o/oauth2/auth',
-    origin: window.location.href.replace(window.location.pathname, ''),
-    redirect_uri: window.location.href,
-    group: {
-      callback: 'Gcontacts._response',
-      from: 'https://www.google.com/m8/feeds/groups/default/',
-      alt: 'json-in-script',
-      projection: 'thin'
-    },
-    contacts: {
-      callback: 'Gcontacts._response',
-      from: 'https://www.google.com/m8/feeds/contacts/default/thin',
-      alt: 'json-in-script'
+    url: 'https://accounts.google.com/o/oauth2/auth'
+    , origin: window.location.href.replace(window.location.pathname, '')
+    , redirect_uri: window.location.href
+    , pagination: {
+        default: {limit: 25}
+        , offset: 'start-index'
+        , limit: 'max-results'
+    }
+    , group: {
+        from: 'https://www.google.com/m8/feeds/groups/default/'
+        , projection: 'thin'
+        , alt: 'json-in-script'
+    }
+    , contacts: {
+        from: 'https://www.google.com/m8/feeds/contacts/default/thin'
+        , alt: 'json-in-script'
     }
   };
   var parameters = {
     params: {
-      client_id: '',
-      response_type: 'token',
-      scope: '',
-      inmediate: 'true'
+      client_id: ''
+      , response_type: 'token'
+      , scope: ''
+      , inmediate: 'true'
     },
     isBlank: function () {
       for (var property in this.params)
@@ -74,19 +76,19 @@ var Gcontacts = (function () {
         window._GcontactsTokenTimeout = setTimeout( "Gcontacts.logout();", msec);
         this.expire_date = new Date();
         this.expire_date.setHours(this.expire_date.getHours() + 1);
-        events.trigger = ['login', 'success'];
+        events.trigger(['login', 'success'])
         console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
       } else {
-        events.trigger = ['logout', 'success'];
+        events.trigger(['logout', 'success'])
         throw (['token expired on', Date()].join(' '));
       }
     }
   };
   var events = {
     events: {},
-    set create(evts) {
-      var dom = window.document;
-      var family = 'gc';
+    create: function(evts) {
+      var dom    = window.document
+        , family = 'gc'
       if (window.CustomEvent) {
         for (var i = 0, event; event = evts[i]; i++)
         events[event] = {
@@ -94,31 +96,34 @@ var Gcontacts = (function () {
           fail: new CustomEvent(['fail', event, family].join('.'))
         }
       } else {
-        for (var i = 0, event; event = evts[i]; i++)
-        events[event] = {
-          success: dom.createElement('Event')
-            .initEvent(['success', event, family].join('.'), false, false),
-          fail: dom.createElement('Event')
-            .initEvent(['fail', event, family].join('.'), false, false)
-        }
+          for (var i = 0, event; event = evts[i]; i++)
+            events[event] = {
+              success: dom.createElement('Event')
+                .initEvent(['success', event, family].join('.'), false, false),
+              fail: dom.createElement('Event')
+                .initEvent(['fail', event, family].join('.'), false, false)
+            }
       }
     },
-    set trigger(evt) {
-      var dom = window.document;
-      var event = events[evt[0]][evt[1]];
+    trigger: function (evt) {
+      var dom   = window.document
+        , event = events[evt[0]][evt[1]]
+
       dom.dispatchEvent ? dom.dispatchEvent(event) : dom.fireEvent('on' + event.eventType, event);
     }
   };
-  var contacts = {};
-  var groups = {};
+
   var auth = function (href) {
     var url = [];
     for (var property in config)
-    if (property !== 'url') url.push([encodeURIComponent(property), encodeURIComponent(config[property])].join('='));
+      if (property !== 'url')
+        url.push([encodeURIComponent(property), encodeURIComponent(config[property])].join('='));
+
     url = url.concat(parameters.encoded());
-    return [(href ? href : config.url), url.join('&')].join('?');
+
+    return [(href || config.url), url.join('&')].join('?')
   };
-  var login = function (event, href) {
+  var login = function (cb, href) {
     if (!token_data.status()) {
       if (parameters.checkConfig())
         window.open(auth(href),
@@ -148,20 +153,21 @@ var Gcontacts = (function () {
       for(var attr in config)
         parameters.params[attr] = config[attr];
       parameters.checkConfig()
-      events.create = ['login', 'logout', 'contacts', 'groups'];
+      events.create(['login', 'logout', 'contacts', 'groups'])
       window.addEventListener('message', message, false);
     } else throw 'wrong initialization';
   };
   var message = function (event) {
     var data = event.data.split('&');
     for (var i in data) {
-      var content = data[i].match('(.*)=(.*)')
-        .splice(1, 3);
+      var content = data[i].match('(.*)=(.*)').splice(1, 3);
+
       token_data[content[0].replace(/^#/, '')] = content[1];
     }
-    if (token_data.isSet()) {
+    if (token_data.isSet())
       token_data.state(true)
-    } else events.trigger = ['login', 'fail'];
+    else
+      events.trigger(['login', 'fail']);
   };
   var cleanup = function () {
     this.parentNode.removeChild(this)
@@ -178,17 +184,7 @@ var Gcontacts = (function () {
 
     document.body.appendChild(script)
   }
-  var getGroups = function (cb, raw) {
-    if (token_data.status()) {
-      var group    = config.group
-        , base     = [group.from, group.projection].join('')
-        , params   = ['alt=' + group.alt]
-        , callback = returnCallback(cb, raw)
 
-      injectScriptInDom(base, params, callback);
-    } else
-      throw 'invalid token'
-  }
   var returnCallback = function (cb, raw, extras) {
     if (typeof(cb) == 'function') {
       var index = internalRandomCode()
@@ -198,32 +194,84 @@ var Gcontacts = (function () {
       return 'Gcontacts._answer[' + index + ']'
     }
   }
-  var allContacts = function (cb, raw) {
+  var getGroups = function (cb, options, raw) {
     if (token_data.status()) {
-      var contact   = config.contacts
-        , base      = contact.from
-        , params    = [['alt', contact.alt].join('=')]
-        , callback  = returnCallback(cb, raw)
+      opts = options || {}
+
+      var group    = config.group
+        , base     = [group.from, group.projection].join('')
+        , limit    = Number(opts.limit || 25)
+        , offset   = Number(opts.offset || 1)
+        , callback = returnCallback(cb, raw)
+        , params   = [
+                      ['alt', group.alt].join('='),
+                      [config.pagination.offset, offset].join('='),
+                      [config.pagination.limit, limit].join('=')
+                     ]
 
       injectScriptInDom(base, params, callback);
     } else
-      throw 'invalid token'
-  };
-  var contactsFromGroup = function (groupLink, cb, raw) {
+        throw 'invalid token'
+  }
+  var allContacts = function (cb, options, raw) {
     if (token_data.status()) {
-      if (!(/^http(s?):\/\//).test(groupLink))
-          throw 'malformed Group Link'
+      options = options || {}
 
       var contact  = config.contacts
-        , callback = returnCallback(cb, raw, {groupLink: groupLink})
+        , base     = contact.from
+        , callback = returnCallback(cb, raw)
+        , limit    = Number(options.limit || 25)
+        , offset   = Number(options.offset || 1)
         , params   = [
-                       ['group', groupLink].join('='),
-                       ['alt', contact.alt].join('=')
+                      ['alt', contact.alt].join('='),
+                      [config.pagination.offset, offset].join('='),
+                      [config.pagination.limit, limit].join('=')
                      ]
 
-      injectScriptInDom(contact.from, params, callback);
+      injectScriptInDom(base, params, callback);
+    } else
+        throw 'invalid token'
+  };
+  var contactsFromGroup = function (groupLink, cb, options, raw) {
+    if (token_data.status()) {
+      options = options || {}
+
+      if (!(/^http(s?):\/\//).test(groupLink))
+        throw 'malformed Group Link'
+
+      var callback = returnCallback(cb, raw, {groupLink: groupLink})
+        , limit    = Number(options.limit || 25)
+        , offset   = Number(options.offset || 1)
+        , params   = [
+                      ['group', groupLink].join('='),
+                      ['alt', config.contacts.alt].join('='),
+                      [config.pagination.offset, offset].join('='),
+                      [config.pagination.limit, limit].join('=')
+                     ]
+
+      injectScriptInDom(config.contacts.from, params, callback);
     } else
       throw 'invalid token'
+  }
+  var paginate = function (direction, pagination) {
+
+    pagination = pagination || {limit: config.pagination.default.limit, offset: 1 }
+
+    var operators = [pagination.limit, 1]
+      , isPlus    = direction == 'next'
+      , offset    = pagination.offset
+
+    for (var i = 0, operator; operator = operators[i++];) {
+      if (isPlus)
+        offset += operator
+      else
+        offset -= operator
+    }
+
+    return function (cb) {
+      return allContacts(cb, {offset: offset, limit: pagination.limit})
+    }
+
   }
   var handleResponse = function (callback, index, extras) {
     return function (e) {
@@ -231,10 +279,19 @@ var Gcontacts = (function () {
 
       if (e.feed) {
         result = {
-          status : 'success',
-          author : e.feed.author[0],
-          title  : e.feed.title['$t']
+            status : 'success'
+          , author : e.feed.author[0]
+          , title  : e.feed.title['$t']
         }
+
+        var pagination = {
+              limit  : Number(e.feed['openSearch$itemsPerPage']['$t'])
+            , offset : Number( e.feed['openSearch$startIndex']['$t'] )
+        }
+        if ((pagination.offset + pagination.limit) < e.feed['openSearch$totalResults']['$t'])
+          result.next = paginate('next', pagination)
+        if (pagination.offset > 1)
+          result.previous = paginate('previous', pagination)
 
         if (e.feed.entry) {
           var entries = e.feed.entry
@@ -245,7 +302,7 @@ var Gcontacts = (function () {
             for (var i = 0, entry, emails, element; entry = entries[i++];) {
 
               element = {
-                name     : entry.title['$t'] || 'none given'
+                  name   : entry.title['$t'] || 'none given'
                 , id     : entry.id['$t'] || 'no id'
               }
 
@@ -265,13 +322,14 @@ var Gcontacts = (function () {
           }
         }
       }
+
       delete response[index]
       return callback(result)
     }
   }
   var ready = function () {
-    events.create = ['ready'];
-    events.trigger = ['ready', 'success'];
+    events.create(['ready'])
+    events.trigger(['ready', 'success'])
   };
 
   return {
