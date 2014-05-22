@@ -1,10 +1,11 @@
 var Gcontacts = (function () {
   'use strict';
 
-  var response = []
+  var timeoutSession, response = []
 
-  var internalRandomCode = function() {
-    return Math.floor(Math.random() * 1000)
+  var internalRandomCode = function () {
+    return 'z' + Math.random().toString(36).substring(10).substring(0, 6);
+
   }
   var config = {
     url: 'https://accounts.google.com/o/oauth2/auth'
@@ -66,14 +67,14 @@ var Gcontacts = (function () {
     isSet: function () {
       return this.access_token && this.expires_in
     },
-    status: function() {
+    status: function () {
       return (this.valid && (this.expire_date > new Date()))
     },
     state: function (val) {
       this.valid = val;
       if (val) {
         var msec = Number(token_data.expires_in) * Number(1000);
-        window._GcontactsTokenTimeout = setTimeout( "Gcontacts.logout();", msec);
+        timeoutSession = setTimeout( "Gcontacts.logout();", msec);
         this.expire_date = new Date();
         this.expire_date.setHours(this.expire_date.getHours() + 1);
         events.trigger(['login', 'success'])
@@ -86,7 +87,7 @@ var Gcontacts = (function () {
   };
   var events = {
     events: {},
-    create: function(evts) {
+    create: function (evts) {
       var dom    = window.document
         , family = 'gc'
       if (window.CustomEvent) {
@@ -147,9 +148,9 @@ var Gcontacts = (function () {
       window.opener.postMessage(window.location.hash, origin_url);
       window.close();
     }
-    if (typeof (config) != undefined) {
-      if (window._GcontactsTokenTimeout != undefined)
-        clearTimeout(window._GcontactsTokenTimeout);
+    if (typeof(config)) {
+      if (timeoutSession)
+        clearTimeout(timeoutSession)
       for(var attr in config)
         parameters.params[attr] = config[attr];
       parameters.checkConfig()
@@ -191,7 +192,7 @@ var Gcontacts = (function () {
 
       response[index] = raw ? cb : handleResponse(cb, index, extras)
 
-      return 'Gcontacts._answer[' + index + ']'
+      return 'Gcontacts._answer.' + index
     }
   }
   var getGroups = function (cb, options, raw) {
@@ -257,16 +258,13 @@ var Gcontacts = (function () {
 
     pagination = pagination || {limit: config.pagination.default.limit, offset: 1 }
 
-    var operators = [pagination.limit, 1]
-      , isPlus    = direction == 'next'
+    var isPlus    = direction == 'next'
       , offset    = pagination.offset
 
-    for (var i = 0, operator; operator = operators[i++];) {
-      if (isPlus)
-        offset += operator
-      else
-        offset -= operator
-    }
+    if (isPlus)
+      offset += pagination.limit
+    else
+      offset -= pagination.limit
 
     return function (cb) {
       return allContacts(cb, {offset: offset, limit: pagination.limit})
@@ -280,18 +278,28 @@ var Gcontacts = (function () {
       if (e.feed) {
         result = {
             status : 'success'
-          , author : e.feed.author[0]
+          , author : {   name: e.feed.author[0]['name']['$t']
+                       , email: e.feed.author[0]['email']['$t']
+                     }
           , title  : e.feed.title['$t']
         }
 
         var pagination = {
               limit  : Number(e.feed['openSearch$itemsPerPage']['$t'])
-            , offset : Number( e.feed['openSearch$startIndex']['$t'] )
+            , offset : Number(e.feed['openSearch$startIndex']['$t'])
+            , total  : Number(e.feed['openSearch$totalResults']['$t'])
         }
-        if ((pagination.offset + pagination.limit) < e.feed['openSearch$totalResults']['$t'])
-          result.next = paginate('next', pagination)
+
+        if ((pagination.offset + pagination.limit) < pagination.total)
+          pagination.next = paginate('next', pagination)
+
         if (pagination.offset > 1)
-          result.previous = paginate('previous', pagination)
+          pagination.previous = paginate('previous', pagination)
+
+        result.pagination = pagination
+
+        if (extras)
+          result.extras = extras
 
         if (e.feed.entry) {
           var entries = e.feed.entry
@@ -317,8 +325,7 @@ var Gcontacts = (function () {
               elements.push(element)
             }
 
-            result['data']   = elements
-            result['extras'] = extras
+            result.data = elements
           }
         }
       }
