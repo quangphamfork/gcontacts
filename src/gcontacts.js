@@ -142,18 +142,20 @@ var Gcontacts = (function () {
   var logout = function () {
       token_data.state(false)
   };
-  var init = function (config) {
+  var init = function (options) {
     if (window.location.hash !== '') {
       var origin_url = window.location.origin || window.location.protocol + window.location.host;
       window.opener.postMessage(window.location.hash, origin_url);
       window.close();
     }
-    if (typeof(config)) {
+    if (options) {
       if (timeoutSession)
         clearTimeout(timeoutSession)
-      for(var attr in config)
-        parameters.params[attr] = config[attr];
+      for(var attr in parameters.params)
+        parameters.params[attr] = options[attr];
       parameters.checkConfig()
+      if ('redirect_uri' in options)
+        config.redirect_uri = options.redirect_uri
       events.create(['login', 'logout'])
       window.addEventListener('message', message, false);
     } else throw 'wrong initialization';
