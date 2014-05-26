@@ -345,7 +345,7 @@ var Gcontacts = (function () {
     init: init,
     login: login,
     logout: logout,
-    allContacts: allContacts,
+    contacts: allContacts,
     groups: getGroups,
     contactsFromGroup: contactsFromGroup,
     _answer: response,
