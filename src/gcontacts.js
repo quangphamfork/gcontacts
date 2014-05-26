@@ -1,7 +1,7 @@
 var Gcontacts = (function () {
   'use strict';
 
-  var timeoutSession, response = []
+  var timeoutSession, onlogin, response = []
 
   var internalRandomCode = function () {
     return 'z' + Math.random().toString(36).substring(10).substring(0, 6);
@@ -77,6 +77,7 @@ var Gcontacts = (function () {
         timeoutSession = setTimeout( "Gcontacts.logout();", msec);
         this.expire_date = new Date();
         this.expire_date.setHours(this.expire_date.getHours() + 1);
+        onlogin()
         events.trigger(['login', 'success'])
         console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
       } else {
@@ -127,6 +128,7 @@ var Gcontacts = (function () {
   };
   var login = function (cb, href) {
     if (!token_data.status()) {
+      onlogin = cb
       if (parameters.checkConfig())
         window.open(auth(href),
         '_blank',
@@ -136,9 +138,8 @@ var Gcontacts = (function () {
          'width=' + window.screen.width / 2,
          'height=' + window.screen.height / 2
         ].join())
-
     } else
-      throw 'you are good to go!'
+      cb()
   };
   var logout = function () {
       token_data.state(false)
