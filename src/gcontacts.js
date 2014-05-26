@@ -116,10 +116,11 @@ var Gcontacts = (function () {
 
   var auth = function (href) {
     var url = [];
-    for (var property in config)
-      if (property !== 'url')
+    for (var property in config){
+      var value = config[property]
+      if (property !== 'url' && typeof(value) == 'string')
         url.push([encodeURIComponent(property), encodeURIComponent(config[property])].join('='));
-
+    }
     url = url.concat(parameters.encoded());
 
     return [(href || config.url), url.join('&')].join('?')
@@ -162,9 +163,8 @@ var Gcontacts = (function () {
   };
   var message = function (event) {
     var data = event.data.split('&');
-    for (var i in data) {
-      var content = data[i].match('(.*)=(.*)').splice(1, 3);
-
+    for (var i = 0, param; param = data[i++];) {
+      var content = param.match('(.*)=(.*)').splice(1, 3);
       token_data[content[0].replace(/^#/, '')] = content[1];
     }
     if (token_data.isSet())
@@ -197,9 +197,9 @@ var Gcontacts = (function () {
       return 'Gcontacts._answer.' + index
     }
   }
-  var getGroups = function (cb, options, raw) {
+  var getGroups = function (cb, pagination, raw) {
     if (token_data.status()) {
-      opts = options || {}
+      var opts = pagination || {}
 
       var group    = config.group
         , base     = [group.from, group.projection].join('')
@@ -216,15 +216,15 @@ var Gcontacts = (function () {
     } else
         throw 'invalid token'
   }
-  var allContacts = function (cb, options, raw) {
+  var allContacts = function (cb, pagination, raw) {
     if (token_data.status()) {
-      options = options || {}
+      var opts = pagination || {}
 
       var contact  = config.contacts
         , base     = contact.from
         , callback = returnCallback(cb, raw)
-        , limit    = Number(options.limit || 25)
-        , offset   = Number(options.offset || 1)
+        , limit    = Number(opts.limit || 25)
+        , offset   = Number(opts.offset || 1)
         , params   = [
                       ['alt', contact.alt].join('='),
                       [config.pagination.offset, offset].join('='),
@@ -235,16 +235,16 @@ var Gcontacts = (function () {
     } else
         throw 'invalid token'
   };
-  var contactsFromGroup = function (groupLink, cb, options, raw) {
+  var contactsFromGroup = function (groupLink, cb, pagination, raw) {
     if (token_data.status()) {
-      options = options || {}
+      var opts = pagination || {}
 
       if (!(/^http(s?):\/\//).test(groupLink))
         throw 'malformed Group Link'
 
       var callback = returnCallback(cb, raw, {groupLink: groupLink})
-        , limit    = Number(options.limit || 25)
-        , offset   = Number(options.offset || 1)
+        , limit    = Number(opts.limit || 25)
+        , offset   = Number(opts.offset || 1)
         , params   = [
                       ['group', groupLink].join('='),
                       ['alt', config.contacts.alt].join('='),
@@ -268,8 +268,8 @@ var Gcontacts = (function () {
     else
       offset -= pagination.limit
 
-    return function (cb) {
-      return allContacts(cb, {offset: offset, limit: pagination.limit})
+    return function (cb, raw) {
+      return allContacts(cb, {offset: offset, limit: pagination.limit}, raw)
     }
 
   }
