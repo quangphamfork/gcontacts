@@ -89,7 +89,11 @@ function: `init`
 required arguments:
 - config
 
-this argument holds the particular information related with your app in google
+This argument holds the particular information related with your app in google
+user content (https://console.developers.google.com/)
+
+note: an optional parameter could be appended to this object: `redirect_uri`
+if this parameter is not provided, the current url will be used.
 
 example:
 
@@ -133,14 +137,14 @@ response: `none`
 Contacts
 --
 
-function: `allContacts`
+function: `contacts`
 
 required arguments:
 - callback
 
 example:
 
-`Gcontacts.allContacts(callback, pagination, raw)`
+`Gcontacts.Contacts(callback, pagination, raw)`
 
 response:
 
