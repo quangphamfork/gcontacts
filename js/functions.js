@@ -159,10 +159,12 @@ var loadGcontacts = function () {
   s.parentNode.insertBefore(gc, s);
 };
 
+var login  = function () {
+  Gcontacts.login(retriveGroups)
+}
 var bindGcontactsEvents = function () {
   window.document.addEventListener('success.ready.gc', function () {
                                      Gcontacts.init(parameters);
-                                     window.document.addEventListener('success.login.gc', retriveGroups)
-                                     $('.cd-dropdown span:first').on('click', Gcontacts.login);
+                                     $('.cd-dropdown span:first').on('click', login);
                                    })
 };
