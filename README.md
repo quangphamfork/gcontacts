@@ -119,10 +119,7 @@ required arguments:
 example:
 `Gcontacts.login(callback, href)`
 
-response:
-
-It will trigger an event called `success.login.gc` that you can bind in
-order to be notified that the login was a success
+response: `none`
 
 Logout
 --
@@ -150,10 +147,10 @@ response:
 
 ``` javascript
       {
-        status: 'success'
+        status: "success",
         author: {
-                  name: 'John Doe',
-                  email: 'email@example.com'
+                  name: "John Doe",
+                  email: "email@example.com"
                 },
         title: "John Doe's contacts",
         pagination: {
@@ -168,8 +165,8 @@ response:
                     id: "http://www.google.com/m8/feeds/contacts/email%40example.com/base/0",
                     email: [
                             [0]: [
-                                  'someContact@example.com',
-                                  'otherEmail@example.com'
+                                  "someContact@example.com",
+                                  "otherEmail@example.com"
                                  ]
                            ],
                     name: "Some Contact"
@@ -196,10 +193,10 @@ response:
 
 ``` javascript
       {
-        status: 'success'
+        status: "success",
         author: {
-                  name: 'John Doe',
-                  email: 'email@example.com'
+                  name: "John Doe",
+                  email: "email@example.com"
                 },
         title: "John Doe's contacts",
         pagination: {
@@ -207,15 +204,15 @@ response:
                       offset: 26,
                       total: 100,
                       next,
-                      previous,
+                      previous
                      },
         data: [
              [0]: {
                     id: "http://www.google.com/m8/feeds/contacts/email%40example.com/base/0",
                     email: [
                             [0]: [
-                                  'someContact@example.com',
-                                  'otherEmail@example.com'
+                                  "someContact@example.com",
+                                  "otherEmail@example.com"
                                  ]
                            ],
                     name: "Some Contact"
@@ -241,17 +238,17 @@ response:
 
 ```javascript
       {
-        status: 'success'
+        status: "success",
         author: {
-                  name: 'John Doe',
-                  email: email@example.com
+                  name: "John Doe",
+                  email: "email@example.com"
                 },
-        title: 'John Doe's contacts',
+        title: "John Doe's contacts",
         pagination: {
                       limit: 25,
                       offset: 1,
                       total: 30,
-                      next
+                      next,
                       previous
                     },
         data: [
