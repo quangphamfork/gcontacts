@@ -50,7 +50,7 @@ a {
 .container > header {
 	width: 90%;
 	max-width: 960px;
-	margin: 50px auto 0;
+	margin: 50px auto;
 	position: relative;
 	padding: 0 10px;
 }
@@ -81,36 +81,37 @@ a {
 	float: left;
 	width: 49%;
 	min-width: 300px;
-  position: relative;
 }
 .fright{
   float: right;
 }
 
-.main:after{
+.main:before{
   display: block;
   position: absolute;
   content: "\00a0";
   width: 0px;
-  height: 100%;
+  height: calc(100% - 50px);
   left: 50%;
   margin-left: -1px;
-  border-right: 1px solid #AAA;
+  border-left: 1px solid #d3d3d3;
+  border-right: 1px solid rgba(255, 255, 255, 0.8);
+  margin-top: 50px;
 }
-.main:before{
-  display:block;
-  position: relative;
-  content: "or";
-  margin: 0 auto -55px;
-  text-align: center;
-}
-.main p {
+
+.main p, .main .divider {
   padding: 20px 30px 0px 0px;
   color: #AAA;
 	font-size: 20px;
 	line-height: 34px;
 	font-weight: 300;
 	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.main .divider{
+  margin: 0 auto -63px;
+  text-align: center;
+  padding: 0
 }
 
 /* Header Style */
