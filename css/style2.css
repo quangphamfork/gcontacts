@@ -39,3 +39,85 @@
 	background: #4d8c9d;
 	color: #fff;
 }
+
+.list {
+  width: 300px;
+  margin: 20px auto;
+}
+.list li span {
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.list li span:last-child {
+  visibility: hidden;
+  height: 0;
+}
+
+.list h3 {
+  margin: 34px 0;
+  text-align: center;
+  padding: 0;
+  color: #AAA;
+	font-size: 20px;
+	font-weight: 400;
+	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.list h3:hover{
+  color: #797878;
+  cursor: pointer;
+}
+
+.list ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  max-height: 100px;
+  overflow: auto;
+}
+
+.list li:last-child {
+  border: none;
+}
+
+.list li {
+  cursor: pointer;
+  font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
+  border-bottom: 1px solid #ccc;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  text-decoration: none;
+  color: #000;
+  display: block;
+
+  -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -o-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
+  transition: font-size 0.3s ease, background-color 0.3s ease;
+}
+
+.list li:hover {
+  cursor: pointer;
+  font-size: 25px;
+  background: #f6f6f6;
+}
+
+.list li:hover span:last-child {
+  height: auto;
+  visibility: visible;
+}
+
+.list li:hover span:first-child {
+  height: 0;
+  visibility: hidden;
+}
+
