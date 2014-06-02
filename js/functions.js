@@ -8,12 +8,14 @@ var tradeOf = function(select) {
   spinner.stop();
 
 };
+
 var goBackFromGroups = function(e) {
   spinner.spin($('.cd-dropdown span:first')[0]);
   (e.value == 'from_contacts')
     ? Gcontacts.groups(replaceGroups)
     : Gcontacts.contactsFromGroup(e.value, replaceContacts());
 };
+
 var retriveGroups = function (e) {
   var $dropdown = $('.cd-dropdown span:first')
 
@@ -21,6 +23,7 @@ var retriveGroups = function (e) {
   spinner.spin($dropdown[0])
   Gcontacts.groups(replaceGroups)
 };
+
 var goBackFromContacts = function (title) {
 
   return function (e) {
@@ -34,6 +37,7 @@ var goBackFromContacts = function (title) {
   }
 
 }
+
 var retriveContactInfo = function (backTitle, backLink) {
   return function (e) {
     var $dropdown = $('.cd-dropdown span:first')
@@ -66,6 +70,21 @@ var retriveContactInfo = function (backTitle, backLink) {
     }
   }
 }
+
+var scrapContactContent = function (data, onBlank) {
+  var contacts = []
+  for (var i = 0, label; label = data[i++];) {
+    var emails = [];
+    if ( label.emails  && label.emails.length)
+      for (var j = 0, email, name; email = label.emails[j++];) {
+        emails.push(email.address)
+
+        name = label.name.length < 20 ? label.name : [label.name.slice(0, 20), '...'].join('');
+      }
+      contacts.push({name: name, email: emails})
+  }
+  return contacts
+}
 var replaceContacts = function (backTitle) {
   return function (e) {
     var $dropdown = $('.cd-dropdown span:first')
@@ -78,23 +97,17 @@ var replaceContacts = function (backTitle) {
     if (!data)
       return noContactsFound()
 
-    for (var i = 0, label; label = data[i++];) {
-      var emails = [];
-      if ( label.emails  && label.emails.length)
-        for (var j = 0, email, name; email = label.emails[j++];) {
-          emails.push(email.address)
+    var contacts = scrapContactContent(data)
 
-          name = label.name.length < 20 ? label.name : [label.name.slice(0, 20), '...'].join('');
-        }
-
-        select.options.add(new Option(name, emails.join(' ')));
-    }
+    for (var i = 0, contact; contact = contacts[i++];)
+      select.options.add(new Option(contact.name, contact.email.join(' ')));
 
     select.options.add(new Option('back', 'groups'))
     tradeOf(select);
     $('ul').on('opened.click.dropdown', retriveContactInfo(title, e.extras.groupLink));
   }
 }
+
 var replaceGroups = function (e) {
   var data   = e.data
     , select = createElement()
@@ -116,11 +129,13 @@ var replaceGroups = function (e) {
 
   $('ul').on('opened.click.dropdown', goBackFromGroups);
 };
+
 var createElement = function () {
   var select = document.createElement('select');
   select.id = 'dropdown';
   return select;
 };
+
 var noGroupsFound = function (e) {
   var select = createElement();
   select.options.add(new Option(e.title, - 1));
@@ -128,6 +143,7 @@ var noGroupsFound = function (e) {
   tradeOf(select);
   $('ul').on('opened.click.dropdown', retriveGroups);
 }
+
 var noContactsFound = function (e) {
   var select = createElement()
     , title  = $('.cd-dropdown span:first').text()
@@ -140,10 +156,10 @@ var noContactsFound = function (e) {
 
   $('ul').on('opened.click.dropdown', retriveGroups);
   }
+
 var random_dropdownEffect = function () {
   var index = Math.floor( Math.random() * dropEffects.length );
-  var picked = dropEffects[index];
-  return picked
+  return dropEffects[index];
 }
 
 var loadGcontacts = function () {
@@ -159,12 +175,43 @@ var loadGcontacts = function () {
   s.parentNode.insertBefore(gc, s);
 };
 
-var login  = function () {
-  Gcontacts.login(retriveGroups)
+var retriveAllContacts = function () {
+  var pagination = {}
+    , limit      = 15
+    , $ul        = $('.list ul')
+    , process    = function (e) {
+        var contacts    = scrapContactContent(e.data)
+          , rawTemplate = document.getElementById('contact').innerHTML
+          , template    = Handlebars.compile(rawTemplate)
+
+        if ('pagination' in e)
+          pagination = e.pagination
+
+        $ul.nearBottom({ callback: pagination.next(process), pixelsFromBottom: 3})
+
+        $ul.append(template(contacts))
+    }
+
+  if ('total' in pagination) return
+
+  Gcontacts.contacts(process, {limit: limit})
+
+  Handlebars.registerHelper('ifBlank', function(email) {
+    return this.email.length ? this.email.join() :  'no emails found'
+  });
 }
+
+var login = function (callback) {
+  return function () {
+    Gcontacts.login(callback)
+  }
+}
+
 var bindGcontactsEvents = function () {
   window.document.addEventListener('success.ready.gc', function () {
                                      Gcontacts.init(parameters);
-                                     $('.cd-dropdown span:first').on('click', login);
+                                     $('.cd-dropdown span:first').on('click', login(retriveGroups));
+                                     $('.list h3:first').on('click', login(retriveAllContacts));
+
                                    })
 };

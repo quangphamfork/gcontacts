@@ -53,20 +53,19 @@
         <div id='allContacts' class="fright">
           <div class='list'>
             <h3>Show all the contacts</h3>
-            <ul>
-              <li>
-              <span>Flavia</span>
-              <span>flavia.ibanez@gmail.com</span>
-              </li>
-              <li>Diego</li>
-              <li>Eli</li>
-              <li>Silvana</li>
-              <li>Mama</li>
-            </ul>
+            <ul></ul>
           </div>
         </div>
       </section>
 		</div><!-- /container -->
+    <script id='contact' type="text/x-handlebars-template">
+      {{#each this}}
+      <li>
+        <span>{{name}}</span>
+        <span>{{#ifBlank}}{{email}}{{/ifBlank}}</span>
+      </li>
+      {{/each}}
+    </script>
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript">
 			var opts = {
@@ -107,7 +106,9 @@
 					}
 			);
 		</script>
+		<script type="text/javascript" src="js/handlebars.js"></script>
 		<script type="text/javascript" src="js/jquery.dropdown.js"></script>
+		<script type="text/javascript" src="js/jquery.endlessScroll.js"></script>
 		<script type="text/javascript" src="js/functions.js"></script>
 		<script type="text/javascript" src="js/spin.min.js"></script>
 	</body>
