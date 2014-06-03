@@ -187,7 +187,8 @@ var retriveAllContacts = function () {
         if ('pagination' in e)
           pagination = e.pagination
 
-        $ul.nearBottom({ callback: pagination.next(process), pixelsFromBottom: 3})
+        if('next' in pagination)
+          $ul.nearBottom({ callback: pagination.next(process), pixelsFromBottom: 3})
 
         $ul.append(template(contacts))
     }
