@@ -7,9 +7,20 @@ var Gcontacts = (function () {
     return 'z' + Math.random().toString(36).substring(10).substring(0, 6);
 
   };
+  var getOrigin = function() {
+      if (window.location.origin) {
+          return window.location.origin;
+      } else {
+          return window.location.protocol + '//' +
+              window.location.hostname +
+             (window.location.port ?
+              ':' + window.location.port :
+              '');
+      }
+  };
   var config = {
     url: 'https://accounts.google.com/o/oauth2/auth'
-    , origin: window.location.href.replace(window.location.pathname, '')
+    , origin: getOrigin()
     , redirect_uri: window.location.href
     , pagination: {
         default: {limit: 25}
@@ -22,7 +33,8 @@ var Gcontacts = (function () {
         , alt: 'json-in-script'
     }
     , contacts: {
-        from: 'https://www.google.com/m8/feeds/contacts/default/thin'
+        from: 'https://www.google.com/m8/feeds/contacts/default/full'
+        , version: 3
         , alt: 'json-in-script'
     }
   };
@@ -79,7 +91,6 @@ var Gcontacts = (function () {
         this.expire_date.setHours(this.expire_date.getHours() + 1);
         onlogin();
         events.trigger(['login', 'success']);
-        console.log(['token valid for:', this.expires_in, 'seconds', 'on:', Date()].join(' '));
       } else {
         events.trigger(['logout', 'success']);
         throw (['token expired on', Date()].join(' '));
@@ -150,8 +161,10 @@ var Gcontacts = (function () {
   var init = function (options) {
     if (window.location.hash !== '') {
       var origin_url = window.location.origin || window.location.protocol + window.location.host;
-      window.opener.postMessage(window.location.hash, origin_url);
-      window.close();
+      if (window.opener) {
+          window.opener.postMessage(window.location.hash, origin_url);
+          window.close();
+      }
     }
     if (options) {
       if (timeoutSession)
@@ -231,6 +244,7 @@ var Gcontacts = (function () {
         , offset   = Number(opts.offset || 1)
         , params   = [
                       ['alt', contact.alt].join('='),
+                      ['v', contact.version].join('='),
                       [config.pagination.offset, offset].join('='),
                       [config.pagination.limit, limit].join('=')
                      ];
@@ -252,6 +266,7 @@ var Gcontacts = (function () {
         , params   = [
                       ['group', groupLink].join('='),
                       ['alt', config.contacts.alt].join('='),
+                      ['v', config.contact.version].join('='),
                       [config.pagination.offset, offset].join('='),
                       [config.pagination.limit, limit].join('=')
                      ];
@@ -311,14 +326,27 @@ var Gcontacts = (function () {
           var entries = e.feed.entry;
 
           if (entries.length) {
-            var elements = [];
+            var elements = []
 
-            for (var i = 0, entry, emails, element; (entry = entries[i++]);) {
+            for (var i = 0, entry, emails, names, element; (entry = entries[i++]);) {
 
               element = {
-                  name   : entry.title.$t || 'none given'
-                , id     : entry.id.$t || 'no id'
+                  name   : entry.title.$t || ''
+                , id     : entry.id.$t || ''
               };
+
+              if (entry.gd$name) {
+                names = entry.gd$name;
+
+                if (names.gd$fullName)
+                    element.full_name = names.gd$fullName.$t;
+
+                if (names.gd$givenName)
+                    element.first_name = names.gd$givenName.$t;
+
+                if (names.gd$familyName)
+                    element.last_name = names.gd$familyName.$t;
+              }
 
               emails = entry.gd$email || [];
 
