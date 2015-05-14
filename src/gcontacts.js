@@ -101,26 +101,41 @@ var Gcontacts = (function () {
     events: {},
     create: function (evts) {
       var dom    = window.document
-        , family = 'gc';
-      if ('CustomEvent' in window) {
+        , family = 'gc'
+        , notIECustomEvents = true
+        , successEvt
+        , failEvt;
+
+      try {
+          new window.CustomEvent('eventName');
+      } catch (ex){
+          notIECustomEvents = false;
+      }
+
+      if (notIECustomEvents) {
         for (var i = 0, event; (event = evts[i]); i++)
-        events[event] = {
-          success: new CustomEvent(['success', event, family].join('.')),
-          fail: new CustomEvent(['fail', event, family].join('.'))
-        };
-      } else {
-          for (var i = 0, event; (event = evts[i]); i++)
-            events[event] = {
-              success: dom.createElement('Event')
-                .initEvent(['success', event, family].join('.'), false, false),
-              fail: dom.createElement('Event')
-                .initEvent(['fail', event, family].join('.'), false, false)
+            this.events[event] = {
+              success: new CustomEvent(['success', event, family].join('.')),
+              fail: new CustomEvent(['fail', event, family].join('.'))
             };
+      } else {
+          for (var i = 0, event; (event = evts[i]); i++) {
+              successEvt = dom.createEvent('CustomEvent');
+              failEvt = dom.createEvent('CustomEvent');
+
+              successEvt.initCustomEvent(['success', event, family].join('.'), false, false, {});
+              failEvt.initCustomEvent(['fail', event, family].join('.'), false, false, {});
+
+              this.events[event] = {
+                  success: successEvt,
+                  fail: failEvt
+              };
+          }
       }
     },
     trigger: function (evt) {
       var dom   = window.document
-        , event = events[evt[0]][evt[1]];
+        , event = this.events[evt[0]][evt[1]];
 
       if ( 'dispatchEvent' in dom )
         dom.dispatchEvent(event);
